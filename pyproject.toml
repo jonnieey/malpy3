@@ -1,0 +1,49 @@
+[tool.poetry]
+name = "mal"
+version = "0.1.0"
+description = "A command line interface to MyAnimeList profile"
+authors = ["Jonnieey <johnjahi55@gmail.com>"]
+readme = "README.md"
+license = "GPL"
+keywords = ["myanimelist", "cli", "mal", "python3"]
+
+include = [ "pyproject.toml", "README.md", "CHANGELOG.md"  ]
+
+classifiers=[
+    "Environment :: Console",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "Topic :: Internet",
+    "Topic :: Games/Entertainment",
+    "Topic :: Utilities",
+    "Operating System :: Unix",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+requests = "*"
+xdg = "*"
+decorating = "^0.6.1"
+
+[tool.poetry.dev-dependencies]
+Sphinx = "^3.2.1"
+sphinx-rtd-theme = "^0.5.0"
+pypandoc = "^1.5"
+wheel = "^0.35.1"
+black = "*"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+mal = "mal.cli:main"
+
+[tool.black]
+line-length = 79
+include = '\.py$'
