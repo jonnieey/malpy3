@@ -109,7 +109,7 @@ class MyAnimeList(object):
     @checked_cancer
     @checked_connection
     @animated("searching in database")
-    def search(self, query, limit=20):
+    def search(self, query, limit=20, category="anime"):
         fields = [
             "anime_statistics",
             "end_date",
@@ -117,6 +117,7 @@ class MyAnimeList(object):
             "id",
             "my_list_status",
             "num_episodes",
+            "num_chapters",
             "start_date",
             "status",
             "synopsis",
@@ -131,8 +132,13 @@ class MyAnimeList(object):
 
         payload = dict(q=query, limit=limit, fields=",".join(fields))
 
+        if category == "anime":
+            search_url = self.base_url + "/anime"
+        elif category == "manga":
+            search_url = self.base_url + "/manga"
+
         r = requests.get(
-            self.base_url + "/anime",
+            search_url,
             params=payload,
             headers=headers,
         )

@@ -109,9 +109,9 @@ def progress_update(mal, regex, inc):
     report_if_fails(response)
 
 
-def search(mal, regex, limit=20, full=False):
+def search(mal, regex, limit=20, full=False, category="anime"):
     """Search the MAL database for an anime."""
-    result = mal.search(regex, limit=limit).json()["data"]
+    result = mal.search(regex, limit=limit, category=category).json()["data"]
     # if no results or only one was found we treat them special
     if len(result) == 0:
         print(color.colorize("No matches in MAL database ᕙ(⇀‸↼‶)ᕗ", "red"))
@@ -119,9 +119,16 @@ def search(mal, regex, limit=20, full=False):
     if len(result) == 1:
         full = True  # full info if only one anime was found
 
+    if category == "anime":
+        ep_header = "Episodes"
+        ep = "num_episodes"
+    elif category == "manga":
+        ep_header = "Chapters"
+        ep = "num_chapters"
+
     lines = [
         "{index}: {title}",
-        "  Episodes: {episodes}",
+        f"  {ep_header} " + ": {episodes}",
         "  Synopsis: {synopsis}",
     ]
     extra_lines = [
@@ -139,7 +146,7 @@ def search(mal, regex, limit=20, full=False):
         anime = _anime.get("node")
         synopsis = anime.get("synopsis")
         if full:
-            synopsis = "\n" + wrap_text(anime.get("synopsis"))
+            synopsis = "\n" + wrap_text(anime.get("synopsis")) + "\n"
 
         elif len(synopsis) > 70 and not full:
             synopsis = synopsis[:70] + "..."
@@ -148,9 +155,7 @@ def search(mal, regex, limit=20, full=False):
         template = {
             "index": str(i + 1),
             "title": color.colorize(anime.get("title"), "red", "bold"),
-            "episodes": color.colorize(
-                anime.get("num_episodes"), "white", "bold"
-            ),
+            "episodes": color.colorize(anime.get(ep), "white", "bold"),
             "synopsis": synopsis,
             "start": "NA"
             if not (

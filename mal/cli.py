@@ -39,6 +39,14 @@ def create_parser():
         "anime_title", help="a substring to match anime titles"
     )
     parser_search.add_argument(
+        "-c",
+        "--cat",
+        default="anime",
+        metavar="category",
+        choices=["anime", "manga"],
+        help="Category to search: [%(choices)s]",
+    )
+    parser_search.add_argument(
         "-l",
         "--limit",
         default=20,
