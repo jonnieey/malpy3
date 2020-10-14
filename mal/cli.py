@@ -49,7 +49,7 @@ def create_parser():
     parser_search.add_argument(
         "-l",
         "--limit",
-        default=20,
+        default=30,
         metavar="limit",
         help="limit number of results (default: %(default)s).",
     )
@@ -61,6 +61,48 @@ def create_parser():
     )
     parser_search.set_defaults(func=commands.search)
 
+    # Parser for "list" command
+    parser_list = subparsers.add_parser(
+        "list", help="list anime/manga in users list using status"
+    )
+    parser_list.add_argument(
+        "status",
+        help=("filter with status: [%(choices)s] (default: %(default)s)"),
+        nargs="?",
+        default="",
+        metavar="status",
+        choices=[
+            "",
+            "watching",
+            "completed",
+            "on hold",
+            "dropped",
+            "plan to watch",
+            "rewatching",
+        ],
+    )
+    parser_list.add_argument(
+        "-l",
+        "--limit",
+        default=30,
+        metavar="limit",
+        help="limit number of results (default: %(default)s).",
+    )
+    parser_list.add_argument(
+        "-c",
+        "--cat",
+        default="anime",
+        metavar="category",
+        choices=["anime", "manga"],
+        help="Category to list: [%(choices)s]",
+    )
+    parser_list.add_argument(
+        "-e",
+        "--extend",
+        action="store_true",  # defaults to False
+        help="display extra info [start/finish dates, tags]",
+    )
+    parser_list.set_defaults(func=commands.list)
     # Parser for "filter" command
     parser_filter = subparsers.add_parser(
         "filter", help="find anime in users list"
@@ -123,40 +165,6 @@ def create_parser():
         "login", help="save login credentials"
     )
     parser_login.set_defaults(func=commands.login)
-
-    # Parser for "list" command
-    parser_list = subparsers.add_parser("list", help="list animes")
-    parser_list.add_argument(
-        "section",
-        help=(
-            "section to display, can be one of: "
-            "[%(choices)s] (default: %(default)s)"
-        ),
-        nargs="?",
-        default="all",
-        metavar="section",
-        choices=[
-            "all",
-            "watching",
-            "completed",
-            "on hold",
-            "dropped",
-            "plan to watch",
-            "rewatching",
-        ],
-    )
-    parser_list.add_argument(
-        "--extend",
-        action="store_true",  # defaults to False
-        help="display extra info such as start/finish dates and tags",
-    )
-    parser_list.add_argument(
-        "--user",
-        type=str,
-        default=None,
-        help="choose which users list to show",
-    )
-    parser_list.set_defaults(func=commands.list)
 
     # Parser for "config" command
     parser_config = subparsers.add_parser(

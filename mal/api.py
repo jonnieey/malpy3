@@ -22,12 +22,8 @@ class MyAnimeList(object):
     """Does all the actual communicating with the MAL api."""
 
     base_url = "https://api.myanimelist.net/v2"
-    mal_client_id = ("6114d00ca681b7701d1e15fe11a4987e",)
-    user_agent = (
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/34.0.1847.116 Safari/537.36"
-    )
+    mal_client_id = "6114d00ca681b7701d1e15fe11a4987e"
+    user_agent = "NineAnimator/2 CFNetwork/976 Darwin/18.2.0"
 
     status_names = {
         1: "watching",
@@ -151,70 +147,110 @@ class MyAnimeList(object):
     @checked_cancer
     @checked_connection
     @animated("preparing animes")
-    def list(
-        self, status="all", type="anime", extra=False, stats=False, user=None
-    ):
-        username = self.username if not user else user
+    def list(self, status="", limit=None, extra=False, category="anime"):
+        """
+        Get Anime and Manga from myanimelist profile.
 
-        payload = dict(u=username, status=status, type=type)
+        Returns:
+            Dictionary of parsed anime/manga fields.
+        """
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json",
+            "User-Agent": self.user_agent,
+            "X-MAL-Client-ID": self.mal_client_id,
+        }
+
+        anime_fields = [
+            "end_date",
+            "num_episodes",
+            "start_date",
+            "my_list_status{score,num_episodes_watched,is_rewatching,status,tags}",
+        ]
+        manga_fields = [
+            "end_date",
+            "num_chapters",
+            "num_volumes",
+            "start_date",
+            "authors",
+            "my_list_status{score,num_chapters_read,is_rereading,num_volumes_read,status,tags}",
+        ]
+
+        if category == "anime":
+            ep_chap = "num_episodes_watched"
+            fields = anime_fields
+            list_url = self.base_url + "/users/@me/animelist"
+            total_ep_chap = "num_episodes"
+            re_watch_read = "is_rewatching"
+
+        elif category == "manga":
+            ep_chap = "num_chapters_read"
+            fields = manga_fields
+            list_url = self.base_url + "/users/@me/mangalist"
+            total_ep_chap = "num_chapters"
+            re_watch_read = "is_rereading"
+
+        payload = dict(status=status, limit=limit, fields=",".join(fields))
+
         r = requests.get(
-            "https://myanimelist.net/malappinfo.php",
+            list_url,
             params=payload,
-            headers={"User-Agent": self.user_agent},
+            headers=headers,
         )
-        if "_Incapsula_Resource" in r.text:
-            raise RuntimeError("Request blocked by Incapsula protection")
-
         result = dict()
-        for raw_entry in ET.fromstring(r.text):
-            entry = dict((attr.tag, attr.text) for attr in raw_entry)
+        raw_entry = r.json()["data"]
 
-            # anime information
-            if "series_animedb_id" in entry:
-                entry_id = int(entry["series_animedb_id"])
+        # anime information
+        for entry in raw_entry:
+            if entry:
+                anime_node = entry.get("node", None)
+                my_list_status = anime_node.get("my_list_status")
+                list_anime_status = entry.get("list_status", None)
+
+                entry_id = int(anime_node.get("id"))
+
                 result[entry_id] = {
                     "id": entry_id,
-                    "title": entry["series_title"],
-                    "episode": int(entry["my_watched_episodes"]),
-                    "status": int(entry["my_status"]),
-                    "score": int(entry["my_score"]),
-                    "total_episodes": int(entry["series_episodes"]),
-                    "rewatching": int(entry["my_rewatching"] or 0),
-                    "status_name": self.status_names[int(entry["my_status"])],
+                    "title": anime_node.get("title"),
+                    "total_episodes": anime_node.get(f"{total_ep_chap}"),
+                    "episode": my_list_status.get(f"{ep_chap}"),
+                    "status": my_list_status.get("status"),
+                    "score": my_list_status.get("score"),
+                    "is_rewatching": my_list_status.get(f"{re_watch_read}"),
                 }
-                # if was rewatching, so the status_name is rewatching
-                if result[entry_id]["rewatching"]:
-                    result[entry_id]["status_name"] = "rewatching"
 
                 # add extra info about anime if needed
                 if extra:
                     extra_info = {
-                        "start_date": self._fdate(entry["my_start_date"]),
-                        "finish_date": self._fdate(entry["my_finish_date"]),
-                        "tags": entry["my_tags"],
+                        "start_date": self._fdate(
+                            anime_node.get("start_date")
+                        ),
+                        "end_date": self._fdate(anime_node.get("end_date")),
+                        "tags": anime_node.get("tags"),
                     }
                     result[entry_id].update(extra_info)
-
-            # user stats
-            if stats and "user_id" in entry:
-                result["stats"] = {}
-                # copy entry dict to result['stats'] without all the 'user_'
-                for k, v in entry.items():
-                    result["stats"][k.replace("user_", "")] = v
 
         return result
 
     def _fdate(self, date, api_format="%Y-%m-%d"):
         """Format date based on the user config format"""
+        if not date:
+            return "NA"
         if any(int(s) == 0 for s in date.split("-")):
             return date
         return datetime.strptime(date, api_format).strftime(self.date_format)
 
     @checked_regex
     @animated("matching animes")
-    def find(self, regex, status="all", extra=False, user=None):
+    def find(self, regex, status="", limit=None, extra=False, category=None):
         result = []
-        for value in self.list(status, extra=extra, user=user).values():
+        for value in self.list(
+            status=status,
+            limit=limit,
+            extra=extra,
+            category=category,
+        ).values():
             if re.search(regex, value["title"], re.I):
                 result.append(value)
         return result

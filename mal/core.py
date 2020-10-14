@@ -323,16 +323,22 @@ def stats(mal, username=None):
     print("\n".join(lines))
 
 
-def find(mal, regex, filtering="all", extra=False, user=None):
+def find(mal, regex, status="", limit=30, extra=False, category="anime"):
     """Find all anime in a certain status given a regex."""
-    items = mal.find(regex, extra=extra, user=user)
+    items = mal.find(
+        regex,
+        status=status,
+        limit=limit,
+        extra=extra,
+        category=category,
+    )
     if len(items) == 0:
         print(color.colorize("No matches in list ᕙ(⇀‸↼‶)ᕗ", "red"))
         return
 
     # filter the results if necessary
-    if filtering != "all":
-        items = [x for x in items if x["status_name"] == filtering]
+    if status != "":
+        items = [x for x in items if x.get("status") == status]
 
     n_items = color.colorize(str(len(items)), "cyan", "underline")
     print("Matched {} items:".format(n_items))
@@ -408,34 +414,34 @@ def anime_pprint(index, item, extra=False):
     """Pretty print an anime's information."""
     padding = int(math.log10(index)) + 3
     remaining_color = (
-        "blue" if item["episode"] < item["total_episodes"] else "green"
+        "blue" if item.get("episode") < item.get("total_episodes") else "green"
     )
     remaining = "{episode}/{total_episodes}".format_map(item)
     in_rewatching = (
-        "#in-rewatching-{rewatching}".format_map(item)
-        if item["rewatching"]
+        "#in-rewatching-{is_rewatching}".format_map(item)
+        if item.get("is_rewatching")
         else ""
     )
     template = {
         "index": index,
         "padding": " " * padding,
-        "status": MyAnimeList.status_names[item["status"]].capitalize(),
-        "title": color.colorize(item["title"], "red", "bold"),
+        "status": item.get("status").capitalize(),
+        "title": color.colorize(item.get("title"), "red", "bold"),
         "remaining": color.colorize(remaining, remaining_color, "bold"),
-        "score": color.score_color(item["score"]),
+        "score": color.score_color(item.get("score")),
         "rewatching": (color.colorize(in_rewatching, "yellow", "bold")),
     }
     # add formating options for extra info
     if extra:
         template.update(
             {
-                "start": item["start_date"]
-                if item["start_date"] != "0000-00-00"
+                "start": item.get("start_date")
+                if item.get("start_date") != "0000-00-00"
                 else "NA",
-                "finish": item["finish_date"]
-                if item["finish_date"] != "0000-00-00"
+                "finish": item.get("end_date")
+                if item["end_date"] != "0000-00-00"
                 else "NA",
-                "tags": item["tags"],
+                "tags": item.get("tags"),
             }
         )
 
