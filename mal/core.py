@@ -8,6 +8,7 @@ import sys
 import math
 import html
 import tempfile
+import textwrap
 import subprocess
 from operator import itemgetter
 from datetime import date
@@ -16,6 +17,12 @@ from datetime import date
 from mal.api import MyAnimeList
 from mal.utils import print_error
 from mal import color
+
+
+def wrap_text(text, width=70):
+    return "\n".join(
+        [textwrap.indent(p, "    ") for p in textwrap.wrap(text, width)]
+    )
 
 
 def report_if_fails(response):
@@ -102,9 +109,9 @@ def progress_update(mal, regex, inc):
     report_if_fails(response)
 
 
-def search(mal, regex, full=False):
+def search(mal, regex, limit=20, full=False):
     """Search the MAL database for an anime."""
-    result = mal.search(regex)
+    result = mal.search(regex, limit=limit).json()["data"]
     # if no results or only one was found we treat them special
     if len(result) == 0:
         print(color.colorize("No matches in MAL database ᕙ(⇀‸↼‶)ᕗ", "red"))
@@ -114,11 +121,11 @@ def search(mal, regex, full=False):
 
     lines = [
         "{index}: {title}",
-        "  Episodes: {episodes}\tScore: {score}",
+        "  Episodes: {episodes}",
         "  Synopsis: {synopsis}",
     ]
     extra_lines = [
-        "  Start date: {start}\tEnd data: {end}",
+        "  Start date: {start}\tEnd date: {end}",
         "  Status: {status}",
     ]
 
@@ -127,26 +134,37 @@ def search(mal, regex, full=False):
         color.colorize(str(len(result)), "cyan", "underline"),
         "animes:",
     )
-    for i, anime in enumerate(result):
+    for i, _anime in enumerate(result):
         # replace tags and special html chars (like &mdash;) with actual characters
-        synopsis = html.unescape(str(anime["synopsis"])).replace("<br />", "")
-        if len(synopsis) > 70 and not full:
+        anime = _anime.get("node")
+        synopsis = anime.get("synopsis")
+        if full:
+            synopsis = "\n" + wrap_text(anime.get("synopsis"))
+
+        elif len(synopsis) > 70 and not full:
             synopsis = synopsis[:70] + "..."
 
         # this template/line stuff might need some refactoring
         template = {
             "index": str(i + 1),
-            "title": color.colorize(anime["title"], "red", "bold"),
-            "episodes": color.colorize(anime["episodes"], "white", "bold"),
-            "score": color.score_color(float(anime["score"])),
+            "title": color.colorize(anime.get("title"), "red", "bold"),
+            "episodes": color.colorize(
+                anime.get("num_episodes"), "white", "bold"
+            ),
             "synopsis": synopsis,
-            "start": anime["start_date"]
-            if anime["start_date"] != "0000-00-00"
-            else "NA",
-            "end": anime["end_date"]
-            if anime["end_date"] != "0000-00-00"
-            else "NA",
-            "status": anime["status"],
+            "start": "NA"
+            if not (
+                anime.get("start_date", None) == "0000-00-00"
+                or anime.get("start_date", None)
+            )
+            else anime.get("start_date"),
+            "end": "NA"
+            if not (
+                anime.get("end_date", None) == "0000-00-00"
+                or anime.get("end_date", None)
+            )
+            else anime.get("end_date"),
+            "status": anime.get("status"),
         }
         print("\n".join(line.format_map(template) for line in lines))
         if full:

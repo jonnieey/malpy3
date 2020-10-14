@@ -21,7 +21,8 @@ config = setup.get_config()
 class MyAnimeList(object):
     """Does all the actual communicating with the MAL api."""
 
-    base_url = "https://api.myanimelist.net/api"
+    base_url = "https://api.myanimelist.net/v2"
+    mal_client_id = ("6114d00ca681b7701d1e15fe11a4987e",)
     user_agent = (
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -108,21 +109,38 @@ class MyAnimeList(object):
     @checked_cancer
     @checked_connection
     @animated("searching in database")
-    def search(self, query):
-        payload = dict(q=query)
+    def search(self, query, limit=20):
+        fields = [
+            "anime_statistics",
+            "end_date",
+            "genres",
+            "id",
+            "my_list_status",
+            "num_episodes",
+            "start_date",
+            "status",
+            "synopsis",
+            "title",
+        ]
+        headers = {
+            "Authorization": f"Bearer: {self.access_token}",
+            "Accept": "application/json",
+            "User-Agent": f"{self.user_agent}",
+            "X-MAL-Client-ID": "6114d00ca681b7701d1e15fe11a4987e",
+        }
+
+        payload = dict(q=query, limit=limit, fields=",".join(fields))
 
         r = requests.get(
-            self.base_url + "/anime/search.xml",
+            self.base_url + "/anime",
             params=payload,
-            auth=(self.username, self.password),
-            headers={"User-Agent": self.user_agent},
+            headers=headers,
         )
 
         if r.status_code == 204:
             return []
 
-        elements = ET.fromstring(r.text)
-        return [dict((attr.tag, attr.text) for attr in el) for el in elements]
+        return r
 
     @checked_cancer
     @checked_connection

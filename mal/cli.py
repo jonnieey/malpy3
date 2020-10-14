@@ -39,9 +39,17 @@ def create_parser():
         "anime_title", help="a substring to match anime titles"
     )
     parser_search.add_argument(
+        "-l",
+        "--limit",
+        default=20,
+        metavar="limit",
+        help="limit number of results (default: %(default)s).",
+    )
+    parser_search.add_argument(
+        "-e",
         "--extend",
         action="store_true",  # defaults to false
-        help="display all available information on anime",
+        help="display extra information about anime",
     )
     parser_search.set_defaults(func=commands.search)
 

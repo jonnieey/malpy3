@@ -17,7 +17,9 @@ from mal import setup
 
 def search(mal, args):
     """Search MAL (not just the user) anime database."""
-    core.search(mal, args.anime_title.lower(), full=args.extend)
+    core.search(
+        mal, args.anime_title.lower(), full=args.extend, limit=args.limit
+    )
 
 
 def filter(mal, args):
