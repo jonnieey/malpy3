@@ -1,11 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
 #
-#   Python Script
-#
-#   Copyright © Manoel Vilela
-#
-#
 
 """These function serve as an entry point for the several subcommands
 of mal. All they do is basically call the functions that do actual work

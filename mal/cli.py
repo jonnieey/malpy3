@@ -1,11 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
 #
-#   Python Script
-#
-#   Copyright © Manoel Vilela
-#
-#
 
 # stdlib
 import sys
@@ -247,7 +242,7 @@ def main():
 
     # Check if authorized
     config = login.get_credentials()
-    if config["config"]["animation"].lower() == "false":
+    if not config["config"]["animation"]:
         decorating.animated.enabled = False
 
     mal_api = MyAnimeList.login(config)

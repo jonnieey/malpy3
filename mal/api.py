@@ -1,11 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
 #
-#   Python Script
-#
-#   Copyright © Manoel Vilela
-#
-#
 
 # stdlib
 import re
@@ -20,11 +15,13 @@ from decorating import animated
 from mal.utils import checked_connection, checked_regex, checked_cancer
 from mal import setup
 
+config = setup.get_config()
+
 
 class MyAnimeList(object):
     """Does all the actual communicating with the MAL api."""
 
-    base_url = "https://myanimelist.net/api"
+    base_url = "https://api.myanimelist.net/api"
     user_agent = (
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
@@ -44,37 +41,69 @@ class MyAnimeList(object):
     status_codes = {v: k for k, v in status_names.items()}
 
     def __init__(
-        self, username, password, date_format=setup.DEFAULT_DATE_FORMAT
+        self,
+        access_token,
+        refresh_token,
+        date_format=config["config"]["date_format"],
     ):
-        self.username = username
-        self.password = password
+        self.access_token = access_token
+        self.refresh_token = refresh_token
         self.date_format = date_format
 
     @checked_connection
     @animated("validating login")
     def validate_login(self):
-        r = requests.get(
-            self.base_url + "/account/verify_credentials.xml",
-            auth=(self.username, self.password),
-            headers={"User-Agent": self.user_agent},
-        )
+        """
+        Verify successful login to myanimelist profile.
+
+        Returns:
+            Response status code.
+
+        """
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/x-www-form-urlencoded",
+        }
+        r = requests.get(self.base_url + "/users/@me", headers=headers)
 
         return r.status_code
 
     @classmethod
     def login(cls, config):
         """Create an instante of MyAnimeList and log it in."""
-        username = config[setup.LOGIN_SECTION]["username"]
-        password = config[setup.LOGIN_SECTION]["password"]
-        date_format = config[setup.CONFIG_SECTION]["date_format"]
+        access_token = config["login"]["access_token"]
+        refresh_token = config["login"]["refresh_token"]
+        date_format = config["config"]["date_format"]
 
-        mal = cls(username, password, date_format)
+        mal = cls(access_token, refresh_token, date_format)
 
         # 401 = unauthorized
         if mal.validate_login() == 401:
             return None
 
         return mal
+
+    @staticmethod
+    def get_tokens(username, password):
+        """Authenticate user via account username and password to get tokens.
+
+        Parameters:
+            username: myanimelist account username.
+            password: myanimelist account password.
+
+        Returns:
+            Response object.
+        """
+        url = "https://api.myanimelist.net/v2/auth/token"
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        data = {
+            "username": username,
+            "password": password,
+            "grant_type": "password",
+            "client_id": "6114d00ca681b7701d1e15fe11a4987e",
+        }
+        r = requests.post(url, headers=headers, data=data)
+        return r
 
     @checked_cancer
     @checked_connection

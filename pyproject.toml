@@ -36,6 +36,8 @@ sphinx-rtd-theme = "^0.5.0"
 pypandoc = "^1.5"
 wheel = "^0.35.1"
 black = "*"
+toml = "*"
+
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

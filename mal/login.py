@@ -1,15 +1,13 @@
 #!/usr/bin/env python
 # coding=utf-8
 #
-#   Python Script
-#
-#   Copyright © Manoel Vilela
-#
-#
 
 # stdlib
 from os import makedirs
 from getpass import getpass
+
+# 3rd party
+import toml
 
 # self-package
 from mal.api import MyAnimeList
@@ -19,9 +17,7 @@ from mal import setup
 
 def get_credentials():
     """Fetch the username and password from the right file."""
-    config = setup.config()
-    if setup.LOGIN_SECTION not in config:
-        config = create_credentials()
+    config = setup.get_config()
 
     return config
 
@@ -33,18 +29,24 @@ def create_credentials():
     invalid = color.colorize(":: invalid credentials! try again", "red")
     print(login_header)
 
-    config = setup.config()
-    if setup.LOGIN_SECTION not in config:
-        config.add_section(setup.LOGIN_SECTION)
-    config.set(setup.LOGIN_SECTION, "username", input("Username: "))
-    config.set(setup.LOGIN_SECTION, "password", getpass())
+    config = setup.get_config()
+    if not config["config"]["animation"]:
+        config["config"]["animation"] = "True"
+    elif not config["config"]["date_format"]:
+        config["config"]["date_format"] = "%Y-%m-%d"
+
+    username = input("Username: ")
+    password = getpass()
+    tokens = MyAnimeList.get_tokens(username, password).json()
+
+    config["login"]["access_token"] = tokens.get("access_token")
+    config["login"]["refresh_token"] = tokens.get("refresh_token")
 
     # confirm that account credentials are correct by trying to log in
     if MyAnimeList.login(config):
         # account is ok, create a config file
-        with open(setup.CONFIG_PATH, "w") as cfg:
-            config.write(cfg)
-            print(successful, "saved in {}".format(setup.CONFIG_PATH))
+        toml.dump(config, setup.CONFIG_PATH.open("w"))
+        print(successful, "saved in {}".format(setup.CONFIG_PATH))
     else:
         print(invalid)
         config = create_credentials()

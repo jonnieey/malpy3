@@ -1,11 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
 #
-#   Python Script
-#
-#   Copyright © Manoel Vilela
-#
-#
 
 # 3rd party
 from decorating.color import colorize
