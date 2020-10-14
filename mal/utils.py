@@ -24,19 +24,25 @@ from mal import color
 
 def killed():
     """Show a message if user terminated the program."""
-    message = ("\n ┑(￣Д ￣)┍ somebody seems killed me..."
-               "\nw a s  Y O U ?! ︵ヽ(`Д´)ﾉ︵﻿ ")
-    print(color.colorize(message, 'red'), file=sys.stderr)
+    message = (
+        "\n ┑(￣Д ￣)┍ somebody seems killed me..."
+        "\nw a s  Y O U ?! ︵ヽ(`Д´)ﾉ︵﻿ "
+    )
+    print(color.colorize(message, "red"), file=sys.stderr)
     os._exit(1)
 
 
 def print_error(error_name, status, reason, kill=False):
-    padding = (len(error_name) + 2) * ' '
-    error = color.colorize(error_name, 'red', 'bold')
-    status = color.colorize(status, 'cyan')
-    print(('{error}: {status}\n'
-           '{padding}{reason} ¯\_(ツ)_/¯'.format_map(locals())),
-          file=sys.stderr)
+    padding = (len(error_name) + 2) * " "
+    error = color.colorize(error_name, "red", "bold")
+    status = color.colorize(status, "cyan")
+    print(
+        (
+            "{error}: {status}\n"
+            "{padding}{reason} ¯\_(ツ)_/¯".format_map(locals())
+        ),
+        file=sys.stderr,
+    )
     if kill:
         os._exit(1)
 
@@ -60,8 +66,10 @@ def print_error(error_name, status, reason, kill=False):
 #                 R
 #                   S
 
+
 def checked_regex(func):
     """Wrap the function in a try/except to catch and handle a BadRegexError."""
+
     @wraps(func)  # keeps the wrapped function's name and docstring intact
     def wrapper(*args, **kwargs):
         result = None
@@ -70,15 +78,17 @@ def checked_regex(func):
         except BadRegexError:
             if AnimatedDecorator.spinner.running:
                 AnimatedDecorator.stop()
-            print_error('BadRegexError', 'invalid regex', 'reason: you')
+            print_error("BadRegexError", "invalid regex", "reason: you")
             sys.exit(1)
 
         return result
+
     return wrapper
 
 
 def checked_cancer(func):
     """Wrap the function in a try/except to catch and handle a BadRegexError."""
+
     @wraps(func)  # keeps the wrapped function's name and docstring intact
     def wrapper(*args, **kwargs):
         result = None
@@ -87,17 +97,19 @@ def checked_cancer(func):
         except xml.etree.ElementTree.ParseError:
             if AnimatedDecorator.spinner.running:
                 AnimatedDecorator.stop()
-            print_error('XMLParseError', 'Invalid API Response', 'reason: MAL IS DEAD')
+            print_error(
+                "XMLParseError", "Invalid API Response", "reason: MAL IS DEAD"
+            )
             sys.exit(1)
 
         return result
+
     return wrapper
-
-
 
 
 def checked_connection(func):
     """Wrap the function in a try/except to catch and handle a ConnectionError."""
+
     @wraps(func)  # keeps the wrapped function's name and docstring intact
     def wrapper(*args, **kwargs):
         result = None

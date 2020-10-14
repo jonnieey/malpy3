@@ -49,7 +49,7 @@ def list(mal, args):
     """Show all the animes on the users list."""
     # . matches any character except line breaks
     # + matches one or more occurences of the previous character
-    core.find(mal, '.+', args.section, extra=args.extend, user=args.user)
+    core.find(mal, ".+", args.section, extra=args.extend, user=args.user)
 
 
 def drop(mal, args):
@@ -75,14 +75,14 @@ def config(mal, args):
 def edit(mal, args):
     """Edit an entry in the users list, if it was present. Notify otherwise."""
     changes = dict()
-    for field in ['score', 'status', 'tags', 'add_tags']:
+    for field in ["score", "status", "tags", "add_tags"]:
         attr = getattr(args, field)
         if attr is not None:
             changes[field] = attr
 
     # turn list of tags into a single string if needed
-    for field in ['tags', 'add_tags']:
+    for field in ["tags", "add_tags"]:
         if field in changes.keys():
-            changes[field] = ' '.join(changes[field])
+            changes[field] = " ".join(changes[field])
 
     core.edit(mal, args.anime_regex.lower(), changes)
