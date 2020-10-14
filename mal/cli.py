@@ -111,15 +111,25 @@ def create_parser():
         "anime_regex", help="regex pattern to match anime titles"
     )
     parser_filter.add_argument(
+        "-l",
+        "--limit",
+        default=30,
+        metavar="limit",
+        help="limit number of results (default: %(default)s).",
+    )
+    parser_filter.add_argument(
+        "-c",
+        "--cat",
+        default="anime",
+        metavar="category",
+        choices=["anime", "manga"],
+        help="Category to list: [%(choices)s]",
+    )
+    parser_filter.add_argument(
+        "-e",
         "--extend",
         action="store_true",
         help="display all available information on anime",
-    )
-    parser_filter.add_argument(
-        "--user",
-        type=str,
-        default=None,
-        help="choose which users list to filter through",
     )
     parser_filter.set_defaults(func=commands.filter)
 
