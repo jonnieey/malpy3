@@ -80,7 +80,6 @@ def create_parser():
             "on hold",
             "dropped",
             "plan to watch",
-            "rewatching",
         ],
         help=("filter with status: [%(choices)s] (default: %(default)s)"),
     )
@@ -225,16 +224,43 @@ def create_parser():
     parser_stats.set_defaults(func=commands.stats)
 
     # Parser for "add" command
-    parser_add = subparsers.add_parser("add", help="add an anime to the list")
-    parser_add.add_argument(
-        "anime_regex", help="regex pattern to match anime titles"
+    parser_add = subparsers.add_parser(
+        "add", help="add an anime/manga to the list"
     )
     parser_add.add_argument(
-        "status",
+        "--cat",
+        "-c",
+        default="anime",
+        metavar="category",
+        choices=["anime", "manga"],
+        help="Category to add from: [%(choices)s]",
+    )
+    parser_add_group = parser_add.add_mutually_exclusive_group()
+    parser_add_group.add_argument(
+        "--regex",
+        "-r",
+        metavar="regex",
+        default="",
+        help="regex pattern to match anime/manga titles",
+    )
+    parser_add_group.add_argument(
+        "--id", "-i", metavar="id", help="anime/manga id to add"
+    )
+    parser_add.add_argument(
+        "--status",
+        "-s",
         type=str,
         nargs="?",
+        metavar="status",
+        choices=[
+            "watching",
+            "completed",
+            "on hold",
+            "dropped",
+            "plan to watch",
+        ],
         default="plan to watch",
-        help='add anime with this status (e.g "on hold")',
+        help="add anime with this status [%(choices)s] (default: %(default)s)",
     )
     parser_add.set_defaults(func=commands.add)
 
@@ -258,7 +284,6 @@ def create_parser():
             "on hold",
             "dropped",
             "plan to watch",
-            "rewatching",
         ],
         help="status to assign to entry: [%(choices)s]",
     )

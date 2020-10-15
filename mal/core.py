@@ -156,7 +156,7 @@ def search(mal, regex, limit=20, full=False, category="anime"):
         ep = "num_chapters"
 
     lines = [
-        "{index}: {title}",
+        "{index}: {title}    {id}",
         f"  {ep_header} " + ": {episodes}",
         "  Synopsis: {synopsis}",
     ]
@@ -183,6 +183,7 @@ def search(mal, regex, limit=20, full=False, category="anime"):
         # this template/line stuff might need some refactoring
         template = {
             "index": str(i + 1),
+            "id": color.colorize(anime.get("id"), "red", "bold"),
             "title": color.colorize(anime.get("title"), "red", "bold"),
             "episodes": color.colorize(anime.get(ep), "white", "bold"),
             "synopsis": synopsis,
@@ -238,20 +239,50 @@ def drop(mal, regex, category="anime"):
     report_if_fails(response)
 
 
-def add(mal, regex, status="plan to watch"):
-    """Add an entry to the user list."""
-    results = mal.search(regex)
-    selected = select_item(results)
+def add(mal, regex="", _id=None, status="plan_to_watch", category="anime"):
+    """
+    Add anime/manga to the user list.
+
+    Parameters:
+        mal: An authenticated MyAnimeList class instance.
+        regex: regex to match Anime/Manga title.
+        _id: id of anime/manga to add.
+        status: status to filter with.
+        category: Category to find from: Anime or Manga
+
+    Returns:
+        None
+    """
+    status_mapping = {"plan_to_watch": "plan_to_read", "watching": "reading"}
+
+    if category == "manga":
+        status = status_mapping.get(status, status)
+
+    entry = dict(status=status, media_type=category)
+
+    if _id:
+        sel = mal.get_anime_details(_id, entry=entry)
+        if sel.status_code != 200:
+            report_if_fails(sel.status_code)
+            sys.exit(1)
+
+        selected = sel.json()
+
+    if regex:
+        response = mal.search(regex, category=category).json()["data"]
+        results = [anime.get("node") for anime in response]
+
+        selected = select_item(results)
 
     print(
         "Adding {title} to list as '{status}'".format(
-            title=color.colorize(selected["title"], "yellow", "bold"),
+            title=color.colorize(selected.get("title"), "yellow", "bold"),
             status=status,
         )
     )
-    mal.update(
-        selected["id"], {"status": mal.status_codes[status]}, action="add"
-    )
+
+    # mal.update(selected["id"], entry=entry)
+    mal.update(selected["id"], entry=entry)
 
 
 def stats(mal):

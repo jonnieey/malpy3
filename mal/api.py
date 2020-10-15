@@ -290,6 +290,12 @@ class MyAnimeList(object):
 
     @checked_connection
     def get_user_info(self):
+        """
+        Get user's information and anime statistics.
+
+        Returns:
+            Response object.
+        """
         fields = [
             "anime_statistics",
         ]
@@ -302,5 +308,70 @@ class MyAnimeList(object):
 
         r = requests.get(
             self.base_url + "/users/@me", params=payload, headers=headers
+        )
+        return r
+
+    @checked_connection
+    def get_anime_details(self, _id, entry=None):
+        """
+        Get anime/manga information
+
+        Parameters:
+            _id: id of anime/manga.
+            entry: dictionary with status and media_type.
+
+        Return:
+            Response object.
+        """
+        fields = [
+            "alternative_titles",
+            "average_episode_duration",
+            "background",
+            "broadcast",
+            "created_at",
+            "end_date",
+            "genres",
+            "id",
+            "main_picture",
+            "mean",
+            "media_type",
+            "my_list_status",
+            "nsfw",
+            "num_episodes",
+            "num_list_users",
+            "num_scoring_users",
+            "popularity",
+            "rank",
+            "rating",
+            "recommendations",
+            "related_anime",
+            "related_manga",
+            "source",
+            "start_date",
+            "start_season",
+            "anime_statistics",
+            "status",
+            "studios",
+            "synopsis",
+            "title",
+            "updated_at",
+        ]
+        if entry.get("media_type") == "manga":
+            info_url = self.base_url + f"/manga/{_id}"
+        else:
+            info_url = self.base_url + f"/anime/{_id}"
+
+        payload = dict(fields=",".join(fields))
+        headers = {
+            "Authorization": f"Bearer: {self.access_token}",
+            "Accept": "application/json",
+            "User-Agent": self.user_agent,
+            "X-MAL-Client-ID": self.mal_client_id,
+        }
+
+        r = requests.get(
+            info_url,
+            params=payload,
+            headers=headers,
         )
         return r
