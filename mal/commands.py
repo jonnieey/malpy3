@@ -63,7 +63,7 @@ def list(mal, args):
     core.find(
         mal,
         ".+",
-        args.status,
+        args.status.replace(" ", "_"),
         limit=args.limit,
         extra=args.extend,
         category=args.cat,
@@ -82,7 +82,9 @@ def stats(mal, args):
 
 def add(mal, args):
     """Add an anime with a certain status to the list."""
-    core.add(mal, args.anime_regex.lower(), status=args.status)
+    core.add(
+        mal, args.anime_regex.lower(), status=args.status.replace(" ", "_")
+    )
 
 
 def config(mal, args):
@@ -96,11 +98,11 @@ def edit(mal, args):
     for field in ["score", "status", "tags", "add_tags"]:
         attr = getattr(args, field)
         if attr is not None:
-            changes[field] = attr
+            changes[field] = attr.replace(" ", "_")
 
     # turn list of tags into a single string if needed
     for field in ["tags", "add_tags"]:
         if field in changes.keys():
             changes[field] = " ".join(changes[field])
 
-    core.edit(mal, args.anime_regex.lower(), changes)
+    core.edit(mal, args.anime_regex.lower(), changes, category=args.cat)

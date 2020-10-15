@@ -42,8 +42,8 @@ def create_parser():
         "anime_title", help="a substring to match anime titles"
     )
     parser_search.add_argument(
-        "-c",
         "--cat",
+        "-c",
         default="anime",
         metavar="category",
         choices=["anime", "manga"],
@@ -57,8 +57,8 @@ def create_parser():
         help="limit number of results (default: %(default)s).",
     )
     parser_search.add_argument(
-        "-e",
         "--extend",
+        "-e",
         action="store_true",  # defaults to false
         help="display extra information about anime",
     )
@@ -92,16 +92,16 @@ def create_parser():
         help="limit number of results (default: %(default)s).",
     )
     parser_list.add_argument(
-        "-c",
         "--cat",
+        "-c",
         default="anime",
         metavar="category",
         choices=["anime", "manga"],
         help="Category to list: [%(choices)s]",
     )
     parser_list.add_argument(
-        "-e",
         "--extend",
+        "-e",
         action="store_true",  # defaults to False
         help="display extra info [start/finish dates, tags]",
     )
@@ -121,16 +121,16 @@ def create_parser():
         help="limit number of results (default: %(default)s).",
     )
     parser_filter.add_argument(
-        "-c",
         "--cat",
+        "-c",
         default="anime",
         metavar="category",
         choices=["anime", "manga"],
         help="Category to list: [%(choices)s]",
     )
     parser_filter.add_argument(
-        "-e",
         "--extend",
+        "-e",
         action="store_true",
         help="display all available information on anime",
     )
@@ -153,8 +153,8 @@ def create_parser():
         help="number of episodes to increase",
     )
     parser_increase.add_argument(
-        "-c",
         "--cat",
+        "-c",
         default="anime",
         metavar="category",
         choices=["anime", "manga"],
@@ -179,8 +179,8 @@ def create_parser():
         help="number of episodes to decrease",
     )
     parser_decrease.add_argument(
-        "-c",
         "--cat",
+        "-c",
         default="anime",
         metavar="category",
         choices=["anime", "manga"],
@@ -209,8 +209,8 @@ def create_parser():
         "anime_regex", help="regex pattern to match anime/manga titles"
     )
     parser_drop.add_argument(
-        "-c",
         "--cat",
+        "-c",
         default="anime",
         metavar="category",
         choices=["anime", "manga"],
@@ -245,14 +245,19 @@ def create_parser():
     parser_add.set_defaults(func=commands.add)
 
     # Parser for "edit" command
-    parser_edit = subparsers.add_parser("edit", help="edit entry")
+    parser_edit = subparsers.add_parser("edit", help="edit anime/manga")
     parser_edit.add_argument(
         "anime_regex", help="regex pattern to match anime titles"
     )
-    parser_edit.add_argument("--score", type=int)
+    parser_edit.add_argument(
+        "--score",
+        metavar="score",
+        type=int,
+        help="score to assign anime/manga",
+    )
     parser_edit.add_argument(
         "--status",
-        help="status to assign to entry",
+        metavar="status",
         choices=[
             "watching",
             "completed",
@@ -261,6 +266,15 @@ def create_parser():
             "plan to watch",
             "rewatching",
         ],
+        help="status to assign to entry: [%(choices)s]",
+    )
+    parser_edit.add_argument(
+        "--cat",
+        "-c",
+        default="anime",
+        metavar="category",
+        choices=["anime", "manga"],
+        help="Category to edit from: [%(choices)s]",
     )
     parser_edit_tags = parser_edit.add_mutually_exclusive_group()
     parser_edit_tags.add_argument(
@@ -268,7 +282,7 @@ def create_parser():
         nargs="+",
         metavar="tag",
         dest="tags",
-        help=("space separated list of tags" " (replaces current tags)"),
+        help="space separated list of tags" " (replaces current tags)",
     )
     parser_edit_tags.add_argument(
         "--add-tags",

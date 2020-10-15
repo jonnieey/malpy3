@@ -400,11 +400,23 @@ def find(mal, regex, status="", limit=30, extra=False, category="anime"):
         anime_pprint(index + 1, item, extra=extra)
 
 
-def edit(mal, regex, changes):
-    """Select and change entry. Opens file with data to change if no
-    field was given."""
+def edit(mal, regex, changes, category="anime"):
+    """
+    Select and change entry. Opens file with data to change if no
+    field was given.
+
+    Parameters:
+        mal: An authenticated MyAnimeList class instance.
+        regex: regex string to filter anime/manga titles.
+        changes: Dictionary with fields to update
+        category: Category to edit:  anime or manga
+
+    Return:
+        None
+    """
     # find the correct entry to modify (handles animes not found)
-    entry = select_item(mal.find(regex, extra=True))
+
+    entry = select_item(mal.find(regex, extra=True, category=category))
 
     if not changes:  # open file for user to choose changes manually
         tmp_path = tempfile.gettempdir() + "/mal_tmp"
@@ -412,7 +424,7 @@ def edit(mal, regex, changes):
         # write information to tmp file
         with open(tmp_path, "w") as tmp:
             tmp.write('# change fields for "{}"\n'.format(entry["title"]))
-            tmp.write("status: {}\n".format(mal.status_names[entry["status"]]))
+            tmp.write("status: {}\n".format(entry["status"]))
             for field in ["score", "tags"]:
                 tmp.write("{}: {}\n".format(field, entry[field]))
 
@@ -434,7 +446,7 @@ def edit(mal, regex, changes):
         for field, value in [tuple(l.split(":")) for l in lines]:
             field, value = field.strip(), value.strip()
             if field == "status":
-                value = str(mal.status_codes[value])
+                value = value
             if str(entry[field]) != value:
                 changes[field] = value
         if not changes:
@@ -456,8 +468,9 @@ def edit(mal, regex, changes):
     if entry.get("tags") is None:
         entry.pop("tags")
 
-    # send it back to update
-    response = mal.update(entry["id"], entry)
+    # send changes back to patch/update
+    changes["media_type"] = category
+    response = mal.update(entry["id"], changes)
     report_if_fails(response)
 
 
