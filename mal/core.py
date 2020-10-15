@@ -94,7 +94,7 @@ def progress_update(mal, regex, inc=1, category="anime"):
     Increase/Decrease anime or manga progress.
 
     Parameters:
-        mal: An authenticated MyAnimeList instance.
+        mal: An authenticated MyAnimeList class instance.
         regex: regex string to filter anime/manga titles.
         inc: Number to increase/decrease episodes or chapters by.
         category: Category to edit:  anime or manga
@@ -139,8 +139,7 @@ def progress_update(mal, regex, inc=1, category="anime"):
 
 
 def search(mal, regex, limit=20, full=False, category="anime"):
-    """
-    Search the MAL database for an anime."""
+    """ Search the MAL database for an anime."""
     result = mal.search(regex, limit=limit, category=category).json()["data"]
     # if no results or only one was found we treat them special
     if len(result) == 0:
@@ -207,14 +206,24 @@ def search(mal, regex, limit=20, full=False, category="anime"):
         print("\n")
 
 
-def drop(mal, regex):
-    """Drop a anime based a regex expression"""
-    items = remove_completed(mal.find(regex))
+def drop(mal, regex, category="anime"):
+    """
+    Drop a anime/manga based a regex expression
+
+    Parameters:
+        mal: An authenticated MyAnimeList class instance.
+        regex: regex to match Anime/Manga title.
+        category: Category to drop from: Anime or Manga
+
+    Returns: None
+
+    """
+    items = remove_completed(mal.find(regex, category=category))
     item = select_item(items)
-    entry = dict(status=mal.status_codes["dropped"])
-    old_status = mal.status_names[item["status"]]
+    entry = dict(status="dropped", media_type=item.get("media_type"))
+    old_status = item.get("status")
     template = {
-        "title": color.colorize(item["title"], "yellow", "bold"),
+        "title": color.colorize(item.get("title"), "yellow", "bold"),
         "old-status": color.colorize(old_status, "green", "bold"),
         "action": color.colorize("Dropping", "red", "bold"),
     }

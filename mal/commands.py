@@ -72,7 +72,7 @@ def list(mal, args):
 
 def drop(mal, args):
     """Drop a anime from lists based in a regex expression"""
-    core.drop(mal, args.anime_regex)
+    core.drop(mal, args.anime_regex, category=args.cat)
 
 
 def stats(mal, args):

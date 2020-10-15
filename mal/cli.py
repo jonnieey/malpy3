@@ -203,10 +203,18 @@ def create_parser():
 
     # Parser for "drop" command
     parser_drop = subparsers.add_parser(
-        "drop", help="Put a selected anime on drop list"
+        "drop", help="Put a selected anime/manga on drop list"
     )
     parser_drop.add_argument(
-        "anime_regex", help="regex pattern to match anime titles"
+        "anime_regex", help="regex pattern to match anime/manga titles"
+    )
+    parser_drop.add_argument(
+        "-c",
+        "--cat",
+        default="anime",
+        metavar="category",
+        choices=["anime", "manga"],
+        help="Category to decrease episodes/chapters: [%(choices)s]",
     )
     parser_drop.set_defaults(func=commands.drop)
 
