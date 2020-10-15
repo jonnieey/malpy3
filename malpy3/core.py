@@ -330,7 +330,8 @@ def stats(mal):
 
     """
 
-    statistics = mal.get_user_info().json().get("anime_statistics")
+    response = mal.get_user_info().json()
+    statistics = response.get("anime_statistics")
 
     line_size = 44 + 2
     bar = "█"
@@ -366,6 +367,7 @@ def stats(mal):
         "total_entries": total_entries,
         "episodes": str(statistics.get("num_episodes")),
         "rewatched": str(statistics.get("num_times_rewatched")),
+        "user" : str(response.get("name")),
         "padd": "{p}",  # needed to format with padding afterwards
     }
 
@@ -373,6 +375,7 @@ def stats(mal):
         return color.colorize("● ", color_name, "bold")
 
     lines = [
+        "User: {user}",
         "Days: {days}{padd}Mean Score: {mean_score}",
         colored,
         (
@@ -429,6 +432,11 @@ def find(mal, regex, status="", limit=30, extra=False, category="anime"):
     Returns: None
 
     """
+    status_mapping = {"plan_to_watch": "plan_to_read", "watching": "reading"}
+
+    if category == "manga":
+        status = status_mapping.get(status, status)
+
     items = mal.find(
         regex,
         status=status,

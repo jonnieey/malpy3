@@ -24,7 +24,7 @@ signal.signal(signal.SIGINT, lambda x, y: killed())
 
 def create_parser():
     parser = argparse.ArgumentParser(
-        prog="malpy3", description="MyAnimeList command line client."
+        prog="mal", description="MyAnimeList command line client."
     )
     parser.add_argument(
         "-v",
@@ -42,7 +42,7 @@ def create_parser():
         "search", help="search an anime/manga globally on MAL"
     )
     parser_search.add_argument(
-        "anime_title", help="a substring to match anime titles"
+        "regex", help="a substring to match anime/manga titles"
     )
     parser_search.add_argument(
         "--cat",
@@ -63,7 +63,7 @@ def create_parser():
         "--extend",
         "-e",
         action="store_true",  # defaults to false
-        help="display extra information about anime",
+        help="display extra information about anime/manga",
     )
     parser_search.set_defaults(func=commands.search)
 
@@ -79,10 +79,12 @@ def create_parser():
         choices=[
             "",
             "watching",
+            "reading",
             "completed",
             "on hold",
             "dropped",
             "plan to watch",
+            "plan to read",
         ],
         help=("filter with status: [%(choices)s] (default: %(default)s)"),
     )
@@ -113,7 +115,11 @@ def create_parser():
         "filter", help="find anime/manga in users list"
     )
     parser_filter.add_argument(
-        "anime_regex", help="regex pattern to match anime titles"
+        "regex",
+        nargs="?",
+        default="",
+        metavar="regex",
+        help="regex pattern to match anime/manga titles",
     )
     parser_filter.add_argument(
         "-l",
@@ -134,7 +140,7 @@ def create_parser():
         "--extend",
         "-e",
         action="store_true",
-        help="display all available information on anime",
+        help="display all available information on anime/manga",
     )
     parser_filter.set_defaults(func=commands.filter)
 
@@ -145,14 +151,14 @@ def create_parser():
         help="decrease anime/manga episode or chapter progress (default: +1) ",
     )
     parser_increase.add_argument(
-        "anime_regex", default="", help="regex pattern to match anime titles"
+        "regex", default="", help="regex pattern to match anime/manga titles"
     )
     parser_increase.add_argument(
         "episodes",
         nargs="?",
         type=int,
         default=1,
-        help="number of episodes to increase",
+        help="number of episodes/chapters to increase",
     )
     parser_increase.add_argument(
         "--cat",
@@ -171,7 +177,7 @@ def create_parser():
         help="decrease anime/manga episode or chapter progress (default: -1) ",
     )
     parser_decrease.add_argument(
-        "anime_regex", help="regex pattern to match anime titles"
+        "regex", help="regex pattern to match anime/manga titles"
     )
     parser_decrease.add_argument(
         "episodes",
@@ -193,7 +199,7 @@ def create_parser():
 
     # Parser for "login" command
     parser_login = subparsers.add_parser(
-        "login", help="login to MAL and save login credentials"
+        "login", help="login to MAL and save access tokens"
     )
     parser_login.set_defaults(func=commands.login)
 
@@ -201,14 +207,13 @@ def create_parser():
     parser_config = subparsers.add_parser(
         "config", help="Print current config file and its path"
     )
-    parser_config.set_defaults(func=commands.config)
 
     # Parser for "drop" command
     parser_drop = subparsers.add_parser(
         "drop", help="Put a selected anime/manga on drop list"
     )
     parser_drop.add_argument(
-        "anime_regex", help="regex pattern to match anime/manga titles"
+        "regex", help="regex pattern to match anime/manga titles"
     )
     parser_drop.add_argument(
         "--cat",
@@ -257,20 +262,22 @@ def create_parser():
         metavar="status",
         choices=[
             "watching",
+            "reading",
             "completed",
             "on hold",
             "dropped",
             "plan to watch",
+            "plan to read",
         ],
         default="plan to watch",
-        help="add anime with this status [%(choices)s] (default: %(default)s)",
+        help="add anime/manga with this status [%(choices)s] (default: %(default)s)",
     )
     parser_add.set_defaults(func=commands.add)
 
     # Parser for "edit" command
     parser_edit = subparsers.add_parser("edit", help="edit anime/manga")
     parser_edit.add_argument(
-        "anime_regex", help="regex pattern to match anime titles"
+        "regex", help="regex pattern to match anime titles"
     )
     parser_edit.add_argument(
         "--score",
@@ -283,10 +290,12 @@ def create_parser():
         metavar="status",
         choices=[
             "watching",
+            "reading",
             "completed",
             "on hold",
             "dropped",
             "plan to watch",
+            "plan to read",
         ],
         help="status to assign to entry: [%(choices)s]",
     )
@@ -327,6 +336,10 @@ def main():
 
     if args.version:
         print(malpy3.__version__)
+        sys.exit(0)
+
+    if args.command == "config":
+        setup.print_config()
         sys.exit(0)
 
     # if the command is login, create credentials and exits

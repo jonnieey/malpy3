@@ -47,7 +47,6 @@ malpy3.core module
 malpy3.login module
 ---------------------
 
-
 .. automodule:: malpy3.login
     :members:
     :undoc-members:

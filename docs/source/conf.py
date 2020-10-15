@@ -32,7 +32,8 @@ import malpy3
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.viewcode']
+              'sphinx.ext.viewcode',
+              'recommonmark']
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:

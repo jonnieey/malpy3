@@ -19,7 +19,7 @@ def search(mal, args):
     """Search MAL (not just the user) anime database."""
     core.search(
         mal,
-        args.anime_title.lower(),
+        args.regex.lower(),
         extra=args.extend,
         limit=args.limit,
         category=args.cat,
@@ -30,7 +30,7 @@ def filter(mal, args):
     """Search and find an anime in the users list."""
     core.find(
         mal,
-        args.anime_regex.lower(),
+        args.regex.lower(),
         limit=args.limit,
         extra=args.extend,
         category=args.cat,
@@ -39,13 +39,13 @@ def filter(mal, args):
 
 def increase(mal, args):
     core.progress_update(
-        mal, args.anime_regex.lower(), inc=args.episodes, category=args.cat
+        mal, args.regex.lower(), inc=args.episodes, category=args.cat
     )
 
 
 def decrease(mal, args):
     core.progress_update(
-        mal, args.anime_regex.lower(), inc=-args.episodes, category=args.cat
+        mal, args.regex.lower(), inc=-args.episodes, category=args.cat
     )
 
 
@@ -72,7 +72,7 @@ def list(mal, args):
 
 def drop(mal, args):
     """Drop a anime from lists based in a regex expression"""
-    core.drop(mal, args.anime_regex, category=args.cat)
+    core.drop(mal, args.regex, category=args.cat)
 
 
 def stats(mal, args):
@@ -91,11 +91,6 @@ def add(mal, args):
     )
 
 
-def config(mal, args):
-    # Show the current config file
-    setup.print_config()
-
-
 def edit(mal, args):
     """Edit an entry in the users list, if it was present. Notify otherwise."""
     changes = dict()
@@ -109,4 +104,4 @@ def edit(mal, args):
         if field in changes.keys():
             changes[field] = " ".join(changes[field])
 
-    core.edit(mal, args.anime_regex.lower(), changes, category=args.cat)
+    core.edit(mal, args.regex.lower(), changes, category=args.cat)

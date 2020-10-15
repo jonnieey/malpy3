@@ -89,12 +89,10 @@ def checked_cancer(func):
         result = None
         try:
             result = func(*args, **kwargs)
-        except xml.etree.ElementTree.ParseError:
+        except Exception as error:
             if AnimatedDecorator.spinner.running:
                 AnimatedDecorator.stop()
-            print_error(
-                "XMLParseError", "Invalid API Response", "reason: MAL IS DEAD"
-            )
+            print_error("Error", "Invalid API Response", error)
             sys.exit(1)
 
         return result
