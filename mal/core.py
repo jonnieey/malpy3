@@ -31,7 +31,16 @@ def report_if_fails(response):
 
 
 def select_item(items):
-    """Select a single item from a list of results."""
+    """
+    Select a single item from a list of results.
+
+    Parameters:
+        items: List of dictionary items.
+
+    Returns:
+        Dictionary.
+
+    """
     item = None
     if len(items) > 1:  # ambigious search results
         print(color.colorize("Multiple results:", "cyan"))
@@ -50,7 +59,18 @@ def select_item(items):
 
 
 def start_end(entry, episode, total_episodes):
-    """Fill details of anime if user just started it or finished it."""
+    """
+    Fill details of anime if user just started it or finished it.
+
+    Parameters:
+        entry: anime dictionary
+        episode: anime episodes watched / manga chapters read.
+        total_episodes: total anime episodes / manga chapters.
+
+    Returns:
+        Dictionary
+
+    """
     if total_episodes == episode:
         entry["status"] = "completed"
         entry["finish_date"] = date.today().strftime("%Y-%m-%d")
@@ -138,15 +158,28 @@ def progress_update(mal, regex, inc=1, category="anime"):
     report_if_fails(response)
 
 
-def search(mal, regex, limit=20, full=False, category="anime"):
-    """ Search the MAL database for an anime."""
+def search(mal, regex, limit=20, extra=False, category="anime"):
+    """
+    Search the MAL database for an anime.
+
+    Parameters:
+        mal: An authenticated MyAnimeList class instance.
+        regex: regex to match Anime/Manga title.
+        limit: int to limit result output.
+        extra: include additional information
+        category: Category to drop from: Anime or Manga
+
+    Returns:
+        None
+
+    """
     result = mal.search(regex, limit=limit, category=category).json()["data"]
     # if no results or only one was found we treat them special
     if len(result) == 0:
         print(color.colorize("No matches in MAL database ᕙ(⇀‸↼‶)ᕗ", "red"))
         return
     if len(result) == 1:
-        full = True  # full info if only one anime was found
+        extra = True  # full info if only one anime was found
 
     if category == "anime":
         ep_header = "Episodes"
@@ -174,10 +207,10 @@ def search(mal, regex, limit=20, full=False, category="anime"):
         # replace tags and special html chars (like &mdash;) with actual characters
         anime = _anime.get("node")
         synopsis = anime.get("synopsis")
-        if full:
+        if extra:
             synopsis = "\n" + wrap_text(anime.get("synopsis")) + "\n"
 
-        elif len(synopsis) > 70 and not full:
+        elif len(synopsis) > 70 and not extra:
             synopsis = synopsis[:70] + "..."
 
         # this template/line stuff might need some refactoring
@@ -202,7 +235,7 @@ def search(mal, regex, limit=20, full=False, category="anime"):
             "status": anime.get("status"),
         }
         print("\n".join(line.format_map(template) for line in lines))
-        if full:
+        if extra:
             print("\n".join(line.format_map(template) for line in extra_lines))
         print("\n")
 

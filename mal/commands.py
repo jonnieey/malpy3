@@ -20,7 +20,7 @@ def search(mal, args):
     core.search(
         mal,
         args.anime_title.lower(),
-        full=args.extend,
+        extra=args.extend,
         limit=args.limit,
         category=args.cat,
     )

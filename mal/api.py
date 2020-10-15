@@ -25,18 +25,6 @@ class MyAnimeList(object):
     mal_client_id = "6114d00ca681b7701d1e15fe11a4987e"
     user_agent = "NineAnimator/2 CFNetwork/976 Darwin/18.2.0"
 
-    status_names = {
-        1: "watching",
-        2: "completed",
-        3: "on hold",
-        4: "dropped",
-        6: "plan to watch",  # not a typo
-        7: "rewatching",  # this not exists in API
-    }  # check list function about 'rewatching'
-
-    # reverse of status_names dict
-    status_codes = {v: k for k, v in status_names.items()}
-
     def __init__(
         self,
         access_token,
@@ -67,7 +55,15 @@ class MyAnimeList(object):
 
     @classmethod
     def login(cls, config):
-        """Create an instante of MyAnimeList and log it in."""
+        """
+        Create an instante of MyAnimeList and log it in.
+
+        Parameters:
+            config: Dictionary  with configuration options.
+
+        Return:
+            MyAnimeList instance.
+        """
         access_token = config["login"]["access_token"]
         refresh_token = config["login"]["refresh_token"]
         date_format = config["config"]["date_format"]
@@ -106,6 +102,17 @@ class MyAnimeList(object):
     @checked_connection
     @animated("searching in database")
     def search(self, query, limit=20, category="anime"):
+        """
+        Search myanimelist database for anime/manga.
+
+        Parameters:
+            query: regex pattern to search.
+            limit: Number of returned results.
+            category: Category to search in: Anime or Manga
+
+        Returns:
+            Response object.
+        """
         fields = [
             "anime_statistics",
             "end_date",
@@ -147,9 +154,15 @@ class MyAnimeList(object):
     @checked_cancer
     @checked_connection
     @animated("preparing animes/manga")
-    def list(self, status="", limit=None, extra=False, category="anime"):
+    def list(self, status="", limit=100, extra=False, category="anime"):
         """
         Get Anime and Manga from myanimelist profile.
+
+        Parameters:
+            status: status to filter results
+            limit: Number of returned results.
+            extra: Extra anime/manga information.
+            category: Category to search in: Anime or Manga.
 
         Returns:
             Dictionary of parsed anime/manga fields.
@@ -237,7 +250,14 @@ class MyAnimeList(object):
         return result
 
     def _fdate(self, date, api_format="%Y-%m-%d"):
-        """Format date based on the user config format"""
+        """
+        Format date based on the user config format
+
+        Parameters:
+            date: datetime object.
+            api_format: strftime format string
+        returns: formatted date string.
+        """
         if not date:
             return "NA"
         if any(int(s) == 0 for s in date.split("-")):
@@ -249,6 +269,19 @@ class MyAnimeList(object):
     def find(
         self, regex, status="", limit=None, extra=False, category="anime"
     ):
+        """
+        Get anime/manga from user's profile.
+
+        Parameters:
+            regex: regex to filter anime/manga titles.
+            status: status to filter results.
+            limit: Number of returned results.
+            extra: Extra anime/manga information.
+            category: Category to search in: Anime or Manga.
+
+        Returns:
+            List of parsed anime/manga fields.
+        """
         result = []
         for value in self.list(
             status=status,
@@ -264,6 +297,16 @@ class MyAnimeList(object):
     @checked_connection
     @animated("updating")
     def update(self, item_id, entry=None):
+        """
+        Update anime/manga.
+
+        Parameters:
+            item_id: id of anime/manga.
+            entry: dict object to patch/update.
+
+        Returns:
+            Response status code.
+        """
         media_type = entry.get("media_type")
         entry.pop("media_type")
 
