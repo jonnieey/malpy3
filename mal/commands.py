@@ -38,11 +38,15 @@ def filter(mal, args):
 
 
 def increase(mal, args):
-    core.progress_update(mal, args.anime_regex.lower(), args.episodes)
+    core.progress_update(
+        mal, args.anime_regex.lower(), inc=args.episodes, category=args.cat
+    )
 
 
 def decrease(mal, args):
-    core.progress_update(mal, args.anime_regex.lower(), -args.episodes)
+    core.progress_update(
+        mal, args.anime_regex.lower(), inc=-args.episodes, category=args.cat
+    )
 
 
 def login(mal, args):

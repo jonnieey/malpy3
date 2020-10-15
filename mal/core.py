@@ -52,8 +52,8 @@ def select_item(items):
 def start_end(entry, episode, total_episodes):
     """Fill details of anime if user just started it or finished it."""
     if total_episodes == episode:
-        entry["status"] = MyAnimeList.status_codes["completed"]
-        entry["date_finish"] = date.today().strftime("%m%d%Y")
+        entry["status"] = "completed"
+        entry["finish_date"] = date.today().strftime("%Y-%m-%d")
         print(color.colorize("Series completed!", "green"))
 
         # set/change score
@@ -69,8 +69,12 @@ def start_end(entry, episode, total_episodes):
                 print(color.colorize("Invalid score.", "red"))
 
     elif episode == 1:
-        entry["status"] = MyAnimeList.status_codes["watching"]
-        entry["date_start"] = date.today().strftime("%m%d%Y")
+        if entry.get("media_type") == "manga":
+            entry["status"] = "reading"
+        else:
+            entry["status"] = "watching"
+
+        entry["start_date"] = date.today().strftime("%Y-%m-%d")
 
     return entry
 
@@ -78,21 +82,46 @@ def start_end(entry, episode, total_episodes):
 def remove_completed(items):
     # remove animes that are already completed
     # preserves (rewatching)
-    for index, status in enumerate(map(itemgetter("status_name"), items)):
+    for index, status in enumerate(map(itemgetter("status"), items)):
         if status == "completed":
             del items[index]
 
     return items
 
 
-def progress_update(mal, regex, inc):
-    items = remove_completed(mal.find(regex))
+def progress_update(mal, regex, inc=1, category="anime"):
+    """
+    Increase/Decrease anime or manga progress.
+
+    Parameters:
+        mal: An authenticated MyAnimeList instance.
+        regex: regex string to filter anime/manga titles.
+        inc: Number to increase/decrease episodes or chapters by.
+        category: Category to edit:  anime or manga
+
+    Returns:
+        Dictionary object with updated values.
+    """
+    items = remove_completed(mal.find(regex, category=category))
     item = select_item(items)  # also handles ambigious searches
-    episode = item["episode"] + inc
-    entry = dict(episode=episode, score=item.get("score", 0))
+    epi_chap = item["episode"] + inc
+
+    if item["media_type"] == "manga":
+        entry = dict(
+            num_chapters_read=epi_chap,
+            score=item.get("score", 0),
+            media_type="manga",
+        )
+    else:
+        entry = dict(
+            num_watched_episodes=epi_chap,
+            score=item.get("score", 0),
+            media_type="anime",
+        )
+
     template = {
         "title": color.colorize(item["title"], "yellow", "bold"),
-        "episode": color.colorize(episode, "red" if inc < 1 else "green"),
+        "episode": color.colorize(epi_chap, "red" if inc < 1 else "green"),
         "total_episodes": color.colorize(item["total_episodes"], "cyan"),
         "procedure": color.procedure_color(inc),
     }
@@ -104,13 +133,14 @@ def progress_update(mal, regex, inc):
         )
     )
 
-    entry = start_end(entry, episode, item["total_episodes"])
+    entry = start_end(entry, epi_chap, item["total_episodes"])
     response = mal.update(item["id"], entry)
     report_if_fails(response)
 
 
 def search(mal, regex, limit=20, full=False, category="anime"):
-    """Search the MAL database for an anime."""
+    """
+    Search the MAL database for an anime."""
     result = mal.search(regex, limit=limit, category=category).json()["data"]
     # if no results or only one was found we treat them special
     if len(result) == 0:
@@ -324,7 +354,19 @@ def stats(mal, username=None):
 
 
 def find(mal, regex, status="", limit=30, extra=False, category="anime"):
-    """Find all anime in a certain status given a regex."""
+    """
+    Find all anime in a certain status given a regex.
+
+    Parameters:
+        regex: regex to match Anime/Manga title.
+        status: status to filter with.
+        limit: int to limit result output.
+        extra: include additional information
+        category: Category to find from: Anime or Manga
+
+    Returns: None
+
+    """
     items = mal.find(
         regex,
         status=status,
@@ -411,14 +453,30 @@ def edit(mal, regex, changes):
 
 
 def anime_pprint(index, item, extra=False):
-    """Pretty print an anime's information."""
+    """
+    Pretty print an anime's information.
+
+    Parameters:
+        index: Index of object (Used for numbering).
+        item : Anime/Manga object
+        extra: Print extra information
+
+    Prints formatted colored output.
+    """
+    if item.get("media_type") == "manga":
+        episode_header = "chapters"
+        re_read_watch = "#in-rereading"
+    else:
+        episode_header = "episoses"
+        re_read_watch = "#in-rewatching"
+
     padding = int(math.log10(index)) + 3
     remaining_color = (
         "blue" if item.get("episode") < item.get("total_episodes") else "green"
     )
     remaining = "{episode}/{total_episodes}".format_map(item)
     in_rewatching = (
-        "#in-rewatching-{is_rewatching}".format_map(item)
+        f"{re_read_watch}" "-{is_rewatching}".format_map(item)
         if item.get("is_rewatching")
         else ""
     )
@@ -448,7 +506,8 @@ def anime_pprint(index, item, extra=False):
     message_lines = [
         "{index}: {title}".format_map(template),
         (
-            "{padding}{status} at {remaining} episodes "
+            "{padding}{status} at {remaining} "
+            f"{episode_header} "
             "with score {score} {rewatching}".format_map(template)
         ),
     ]

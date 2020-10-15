@@ -29,11 +29,14 @@ def create_parser():
     parser.add_argument(
         "-v", "--version", action="store_true", help="show the version of mal"
     )
-    subparsers = parser.add_subparsers(help="commands", dest="command")
+    subparsers = parser.add_subparsers(
+        dest="command",
+        help="commands",
+    )
 
     # Parser for "search" command
     parser_search = subparsers.add_parser(
-        "search", help="search an anime globally on MAL"
+        "search", help="search an anime/manga globally on MAL"
     )
     parser_search.add_argument(
         "anime_title", help="a substring to match anime titles"
@@ -67,7 +70,6 @@ def create_parser():
     )
     parser_list.add_argument(
         "status",
-        help=("filter with status: [%(choices)s] (default: %(default)s)"),
         nargs="?",
         default="",
         metavar="status",
@@ -80,6 +82,7 @@ def create_parser():
             "plan to watch",
             "rewatching",
         ],
+        help=("filter with status: [%(choices)s] (default: %(default)s)"),
     )
     parser_list.add_argument(
         "-l",
@@ -105,7 +108,7 @@ def create_parser():
     parser_list.set_defaults(func=commands.list)
     # Parser for "filter" command
     parser_filter = subparsers.add_parser(
-        "filter", help="find anime in users list"
+        "filter", help="find anime/manga in users list"
     )
     parser_filter.add_argument(
         "anime_regex", help="regex pattern to match anime titles"
@@ -136,11 +139,11 @@ def create_parser():
     # Parser for "increase" command
     parser_increase = subparsers.add_parser(
         "increase",
-        help="increase anime's watched episodes by one",
         aliases=["inc"],
+        help="decrease anime/manga episode or chapter progress (default: +1) ",
     )
     parser_increase.add_argument(
-        "anime_regex", help="regex pattern to match anime titles"
+        "anime_regex", default="", help="regex pattern to match anime titles"
     )
     parser_increase.add_argument(
         "episodes",
@@ -149,13 +152,21 @@ def create_parser():
         default=1,
         help="number of episodes to increase",
     )
+    parser_increase.add_argument(
+        "-c",
+        "--cat",
+        default="anime",
+        metavar="category",
+        choices=["anime", "manga"],
+        help="Category to increase episodes/chapters: [%(choices)s]",
+    )
     parser_increase.set_defaults(func=commands.increase)
 
     # Parser for "decrease" command
     parser_decrease = subparsers.add_parser(
         "decrease",
-        help="decrease anime's watched episodes by one",
         aliases=["dec"],
+        help="decrease anime/manga episode or chapter progress (default: -1) ",
     )
     parser_decrease.add_argument(
         "anime_regex", help="regex pattern to match anime titles"
@@ -167,12 +178,20 @@ def create_parser():
         default=1,
         help="number of episodes to decrease",
     )
+    parser_decrease.add_argument(
+        "-c",
+        "--cat",
+        default="anime",
+        metavar="category",
+        choices=["anime", "manga"],
+        help="Category to decrease episodes/chapters: [%(choices)s]",
+    )
 
     parser_decrease.set_defaults(func=commands.decrease)
 
     # Parser for "login" command
     parser_login = subparsers.add_parser(
-        "login", help="save login credentials"
+        "login", help="login to MAL and save login credentials"
     )
     parser_login.set_defaults(func=commands.login)
 

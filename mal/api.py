@@ -164,16 +164,18 @@ class MyAnimeList(object):
 
         anime_fields = [
             "end_date",
+            "media_type",
             "num_episodes",
             "start_date",
             "my_list_status{score,num_episodes_watched,is_rewatching,status,tags}",
         ]
         manga_fields = [
+            "authors",
             "end_date",
+            "media_type",
             "num_chapters",
             "num_volumes",
             "start_date",
-            "authors",
             "my_list_status{score,num_chapters_read,is_rereading,num_volumes_read,status,tags}",
         ]
 
@@ -216,6 +218,7 @@ class MyAnimeList(object):
                     "total_episodes": anime_node.get(f"{total_ep_chap}"),
                     "episode": my_list_status.get(f"{ep_chap}"),
                     "status": my_list_status.get("status"),
+                    "media_type": anime_node.get("media_type"),
                     "score": my_list_status.get("score"),
                     "is_rewatching": my_list_status.get(f"{re_watch_read}"),
                 }
@@ -243,7 +246,9 @@ class MyAnimeList(object):
 
     @checked_regex
     @animated("matching animes")
-    def find(self, regex, status="", limit=None, extra=False, category=None):
+    def find(
+        self, regex, status="", limit=None, extra=False, category="anime"
+    ):
         result = []
         for value in self.list(
             status=status,
@@ -258,22 +263,27 @@ class MyAnimeList(object):
     @checked_cancer
     @checked_connection
     @animated("updating")
-    def update(self, item_id, entry, action="update"):
-        tree = ET.Element("entry")
-        for key, val in entry.items():
-            ET.SubElement(tree, key).text = str(val)
+    def update(self, item_id, entry=None):
+        media_type = entry.get("media_type")
+        entry.pop("media_type")
 
-        encoded = ET.tostring(tree).decode("utf-8")
-        xml_item = '<?xml version="1.0" encoding="UTF-8"?>' + encoded
+        if media_type == "manga":
+            root = "manga"
+        else:
+            root = "anime"
 
-        payload = {"data": xml_item}
-        r = requests.post(
-            self.base_url
-            + "/animelist/{}/".format(action)
-            + str(item_id)
-            + ".xml",
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json",
+            "User-Agent": self.user_agent,
+            "X-MAL-Client-ID": self.mal_client_id,
+        }
+
+        payload = entry
+        r = requests.patch(
+            self.base_url + f"/{root}/{item_id}/my_list_status",
             data=payload,
-            auth=(self.username, self.password),
-            headers={"User-Agent": self.user_agent},
+            headers=headers,
         )
         return r.status_code
