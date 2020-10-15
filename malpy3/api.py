@@ -12,8 +12,8 @@ import requests
 from decorating import animated
 
 # self-package
-from mal.utils import checked_connection, checked_regex, checked_cancer
-from mal import setup
+from malpy3.utils import checked_connection, checked_regex, checked_cancer
+from malpy3 import setup
 
 config = setup.get_config()
 

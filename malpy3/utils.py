@@ -14,7 +14,7 @@ from decorating.animation import AnimatedDecorator
 from requests.exceptions import ConnectionError
 
 # self-package
-from mal import color
+from malpy3 import color
 
 
 def killed():

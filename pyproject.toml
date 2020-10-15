@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "mal"
+name = "malpy3"
 version = "0.1.0"
 description = "A command line interface to MyAnimeList profile"
 authors = ["Jonnieey <johnjahi55@gmail.com>"]
@@ -29,6 +29,7 @@ python = "^3.6"
 requests = "*"
 xdg = "*"
 decorating = "^0.6.1"
+toml = "*"
 
 [tool.poetry.dev-dependencies]
 Sphinx = "^3.2.1"
@@ -36,7 +37,6 @@ sphinx-rtd-theme = "^0.5.0"
 pypandoc = "^1.5"
 wheel = "^0.35.1"
 black = "*"
-toml = "*"
 
 
 [build-system]
@@ -44,7 +44,7 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-mal = "mal.cli:main"
+mal = "malpy3.cli:main"
 
 [tool.black]
 line-length = 79

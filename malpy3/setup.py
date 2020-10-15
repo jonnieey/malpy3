@@ -12,7 +12,7 @@ from xdg import XDG_CONFIG_HOME
 import decorating
 
 # self-package
-from mal import __name__ as APP_NAME
+from malpy3 import __name__ as APP_NAME
 
 # variables for proper saving
 APP_FILE = "myanimelist.toml"

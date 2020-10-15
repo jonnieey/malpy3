@@ -14,9 +14,9 @@ from operator import itemgetter
 from datetime import date
 
 # self-package
-from mal.api import MyAnimeList
-from mal.utils import print_error
-from mal import color
+from malpy3.api import MyAnimeList
+from malpy3.utils import print_error
+from malpy3 import color
 
 
 def wrap_text(text, width=70):

@@ -8,13 +8,13 @@ import signal
 import argparse
 
 # self-package
-import mal
-from mal.api import MyAnimeList
-from mal.utils import killed
-from mal import color
-from mal import login
-from mal import commands
-from mal import setup
+import malpy3
+from malpy3.api import MyAnimeList
+from malpy3.utils import killed
+from malpy3 import color
+from malpy3 import login
+from malpy3 import commands
+from malpy3 import setup
 
 import decorating
 
@@ -24,10 +24,13 @@ signal.signal(signal.SIGINT, lambda x, y: killed())
 
 def create_parser():
     parser = argparse.ArgumentParser(
-        prog="mal", description="MyAnimeList command line client."
+        prog="malpy3", description="MyAnimeList command line client."
     )
     parser.add_argument(
-        "-v", "--version", action="store_true", help="show the version of mal"
+        "-v",
+        "--version",
+        action="store_true",
+        help="show the version of malpy3",
     )
     subparsers = parser.add_subparsers(
         dest="command",
@@ -323,7 +326,7 @@ def main():
         args = parser.parse_args()
 
     if args.version:
-        print(mal.__version__)
+        print(malpy3.__version__)
         sys.exit(0)
 
     # if the command is login, create credentials and exits

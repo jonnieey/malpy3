@@ -1,7 +1,7 @@
-mal
-===
+malpy3
+======
 
 .. toctree::
    :maxdepth: 4
-
-   mal
+    
+   malpy3

@@ -23,9 +23,9 @@ install:
 	poetry install --no-dev
 
 clean:
-	find . -name __pycache__ -name *.pyc | xargs rm -rfv;
+	find . -name __pycache__ -or -name *.pyc | xargs rm -rfv
 	rm -rfv $(BUILD_FILES)
 
 format:
-	black mal tests
+	black malpy3 tests
 

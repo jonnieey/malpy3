@@ -10,9 +10,9 @@ from getpass import getpass
 import toml
 
 # self-package
-from mal.api import MyAnimeList
-from mal import color
-from mal import setup
+from malpy3.api import MyAnimeList
+from malpy3 import color
+from malpy3 import setup
 
 
 def get_credentials():

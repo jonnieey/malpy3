@@ -3,16 +3,16 @@
 #
 
 """These function serve as an entry point for the several subcommands
-of mal. All they do is basically call the functions that do actual work
+of malpy3. All they do is basically call the functions that do actual work
 in the core module."""
 
 # stdlib
 import sys
 
 # self-package
-from mal import core
-from mal import login as _login
-from mal import setup
+from malpy3 import core
+from malpy3 import login as _login
+from malpy3 import setup
 
 
 def search(mal, args):
