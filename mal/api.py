@@ -146,7 +146,7 @@ class MyAnimeList(object):
 
     @checked_cancer
     @checked_connection
-    @animated("preparing animes")
+    @animated("preparing animes/manga")
     def list(self, status="", limit=None, extra=False, category="anime"):
         """
         Get Anime and Manga from myanimelist profile.
@@ -245,7 +245,7 @@ class MyAnimeList(object):
         return datetime.strptime(date, api_format).strftime(self.date_format)
 
     @checked_regex
-    @animated("matching animes")
+    @animated("matching animes/manga")
     def find(
         self, regex, status="", limit=None, extra=False, category="anime"
     ):
@@ -287,3 +287,20 @@ class MyAnimeList(object):
             headers=headers,
         )
         return r.status_code
+
+    @checked_connection
+    def get_user_info(self):
+        fields = [
+            "anime_statistics",
+        ]
+
+        payload = dict(fields=",".join(fields))
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/x-www-form-urlencoded",
+        }
+
+        r = requests.get(
+            self.base_url + "/users/@me", params=payload, headers=headers
+        )
+        return r

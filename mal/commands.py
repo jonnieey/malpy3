@@ -76,8 +76,8 @@ def drop(mal, args):
 
 
 def stats(mal, args):
-    """Show the users anime watching statistics as presented on MAL."""
-    core.stats(mal, args.user)
+    """Show the user's anime watching statistics as presented on MAL."""
+    core.stats(mal)
 
 
 def add(mal, args):

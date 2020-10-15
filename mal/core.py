@@ -254,65 +254,54 @@ def add(mal, regex, status="plan to watch"):
     )
 
 
-def stats(mal, username=None):
-    """Print user anime stats."""
-    # get all the info
-    animes = mal.list(stats=True, user=username)
-    if not animes:
-        print_error(
-            "Empty query",
-            "username not found",
-            "could not fetch list for user '{}'".format(username),
-            kill=True,
-        )
-    user_info = animes.pop("stats")  # remove stats from anime list
+def stats(mal):
+    """
+    Print user's anime stats.
 
-    # gather all the numbers
-    total_entries = len(animes)
-    rewatched, episodes, mean_score, scored = 0, 0, 0, 0
-    for anime in animes.values():
-        episodes += anime["episode"]  # this is watched episodes
-        if anime["rewatching"] != 0:
-            rewatched += anime["rewatching"]
-            # take into account episodes seen in previous watchings
-            episodes += anime["rewatching"] * anime["total_episodes"]
+    Parameters:
+        mal: An authenticated MyAnimeList class instance.
 
-        if anime["score"] != 0:
-            scored += 1
-        mean_score += anime["score"]
+    Returns:
+        None
 
-    if scored != 0:
-        mean_score /= scored
-    # added two for circle colored + space on each list
+    """
+
+    statistics = mal.get_user_info().json().get("anime_statistics")
+
     line_size = 44 + 2
-    # ↑ code for calculating this was so messy I hardcoded instead
-    # it's 20 spaces for each of the 'sides' and 4 spaces in between them
-
-    # colored bar. borrowed the bar char from neofetch
     bar = "█"
     colors = ["green", "blue", "yellow", "red", "gray"]
-    lists = ["watching", "completed", "onhold", "dropped", "plantowatch"]
+    lists = [
+        "num_items_watching",
+        "num_items_completed",
+        "num_items_on_hold",
+        "num_items_dropped",
+        "num_items_plan_to_watch",
+    ]
     colored = str()
+    total_entries = statistics["num_items"]
+
     if total_entries != 0:  # to prevent division by zero
         for i, status in enumerate(lists):
-            entries = int(user_info[status])
+            entries = int(statistics[status])
             bars = round(line_size * (entries / total_entries))
             colored += color.colorize(bar * bars, colors[i])
     else:
         colored = color.colorize(bar * line_size, "white")
 
     # format the lines to print more easily afterwards
+    mean_score = statistics.get("mean_score")
     template = {
-        "days": user_info["days_spent_watching"],
+        "days": statistics.get("num_days_watched"),
         "mean_score": "{:.2f}".format(mean_score),
-        "watching": user_info["watching"],
-        "completed": user_info["completed"],
-        "hold": user_info["onhold"],
-        "plan": user_info["plantowatch"],
-        "dropped": user_info["dropped"],
-        "total_entries": str(total_entries),
-        "episodes": str(episodes),
-        "rewatched": str(rewatched),
+        "watching": str(statistics.get("num_items_watching")),
+        "completed": str(statistics.get("num_items_completed")),
+        "hold": str(statistics.get("num_items_on_hold")),
+        "plan": str(statistics.get("num_items_plan_to_watch")),
+        "dropped": str(statistics.get("num_items_dropped")),
+        "total_entries": total_entries,
+        "episodes": str(statistics.get("num_episodes")),
+        "rewatched": str(statistics.get("num_times_rewatched")),
         "padd": "{p}",  # needed to format with padding afterwards
     }
 
