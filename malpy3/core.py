@@ -367,7 +367,7 @@ def stats(mal):
         "total_entries": total_entries,
         "episodes": str(statistics.get("num_episodes")),
         "rewatched": str(statistics.get("num_times_rewatched")),
-        "user" : str(response.get("name")),
+        "user": str(response.get("name")),
         "padd": "{p}",  # needed to format with padding afterwards
     }
 
@@ -550,7 +550,7 @@ def anime_pprint(index, item, extra=False):
         episode_header = "chapters"
         re_read_watch = "#in-rereading"
     else:
-        episode_header = "episoses"
+        episode_header = "episodes"
         re_read_watch = "#in-rewatching"
 
     padding = int(math.log10(index)) + 3
@@ -568,6 +568,7 @@ def anime_pprint(index, item, extra=False):
         "padding": " " * padding,
         "status": item.get("status").capitalize(),
         "title": color.colorize(item.get("title"), "red", "bold"),
+        "id": color.colorize(item.get("id"), "red", "bold"),
         "remaining": color.colorize(remaining, remaining_color, "bold"),
         "score": color.score_color(item.get("score")),
         "rewatching": (color.colorize(in_rewatching, "yellow", "bold")),
@@ -587,7 +588,7 @@ def anime_pprint(index, item, extra=False):
         )
 
     message_lines = [
-        "{index}: {title}".format_map(template),
+        "{index}: {title} : {id}".format_map(template),
         (
             "{padding}{status} at {remaining} "
             f"{episode_header} "
@@ -607,3 +608,37 @@ def anime_pprint(index, item, extra=False):
         )
 
     print("\n".join(message_lines), "\n")
+
+
+def delete(mal, regex="", _id=None, category="anime"):
+    """
+    Delete anime/manga from myanimelist
+
+    Parameters:
+        mal: An authenticated MyAnimeList class instance.
+        regex: regex string to filter anime/manga titles.
+        category: Category to delete from:  anime or manga
+
+    Returns:
+        None
+
+    """
+    if _id is not None and isinstance(_id, int):
+        delete_id = _id
+
+    else:
+        entry = select_item(mal.find(regex, extra=True, category=category))
+        delete_id = entry.get("id")
+
+        confirm = input(f"Are you sure you want to delete {entry['title']}? ")
+
+        if confirm.upper() != "Y":
+            sys.exit(0)
+
+    response = mal.delete(delete_id, category=category)
+    if response != 200:
+        print(color.colorize("Failed to delete", "red", "bold"))
+
+    else:
+        print(color.colorize("Successfully deleted", "green", "bold"))
+        report_if_fails(response)

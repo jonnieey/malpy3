@@ -332,6 +332,7 @@ class MyAnimeList(object):
         return r.status_code
 
     @checked_connection
+    @animated("Fetching User Info")
     def get_user_info(self):
         """
         Get user's information and anime statistics.
@@ -355,6 +356,7 @@ class MyAnimeList(object):
         return r
 
     @checked_connection
+    @animated("Fetching Anime/Manga details")
     def get_anime_details(self, _id, entry=None):
         """
         Get anime/manga information
@@ -418,3 +420,34 @@ class MyAnimeList(object):
             headers=headers,
         )
         return r
+
+    @checked_cancer
+    @checked_connection
+    @animated("Deleting Anime/Manga")
+    def delete(self, _id, category=None):
+        """
+        Delete anime/manga.
+
+        Parameters:
+            _id: id of anime/manga.
+            category: Category to delete from: Anime or Manga.
+
+        Returns:
+            Response status code.
+        """
+
+        if category == "manga":
+            delete_url = self.base_url + f"/manga/{_id}/my_list_status"
+        else:
+            delete_url = self.base_url + f"/anime/{_id}/my_list_status"
+
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json",
+            "User-Agent": self.user_agent,
+            "X-MAL-Client-ID": self.mal_client_id,
+        }
+
+        r = requests.delete(delete_url, headers=headers)
+        return r.status_code

@@ -323,6 +323,36 @@ def create_parser():
     )
     parser_edit.set_defaults(func=commands.edit)
 
+    parser_delete = subparsers.add_parser(
+        "delete", help="delete anime/manga from list"
+    )
+    parser_delete_group = parser_delete.add_mutually_exclusive_group()
+    parser_delete_group.add_argument(
+        "--regex",
+        "-r",
+        default="",
+        nargs="?",
+        metavar="regex",
+        help="regex pattern to match anime titles",
+    )
+    parser_delete_group.add_argument(
+        "--id",
+        "-i",
+        default=None,
+        type=int,
+        metavar="id",
+        help="id of anime/manga to delete",
+    )
+    parser_delete.add_argument(
+        "--cat",
+        "-c",
+        default="anime",
+        metavar="category",
+        choices=["anime", "manga"],
+        help="Category to edit from: [%(choices)s]",
+    )
+    parser_delete.set_defaults(func=commands.delete)
+
     return parser
 
 

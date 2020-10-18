@@ -105,3 +105,7 @@ def edit(mal, args):
             changes[field] = " ".join(changes[field])
 
     core.edit(mal, args.regex.lower(), changes, category=args.cat)
+
+
+def delete(mal, args):
+    core.delete(mal, regex=args.regex, _id=args.id, category=args.cat)
