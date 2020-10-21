@@ -53,7 +53,7 @@ On it's first call to any valid command, it will ask for your
 username and password.
 
 It will authenticate it with MAL and returns tokens which are
-stored in XDG_CONFIG_HOME path.  (on linux ``~/.config/mal/myanimelist.toml``).
+stored in XDG_CONFIG_HOME path.  (on linux ``~/.config/malpy3/myanimelist.toml``).
 
 
 ## Using The Interface
