@@ -97,7 +97,10 @@ def edit(mal, args):
     for field in ["score", "status", "tags", "add_tags"]:
         attr = getattr(args, field)
         if attr is not None:
-            changes[field] = attr.replace(" ", "_")
+            if isinstance(attr, int):
+                changes[field] = attr
+            else:
+                changes[field] = attr.replace(" ", "_")
 
     # turn list of tags into a single string if needed
     for field in ["tags", "add_tags"]:

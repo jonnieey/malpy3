@@ -30,6 +30,7 @@ requests = "*"
 xdg = "*"
 decorating = "^0.6.1"
 toml = "*"
+pynumparser = "^1.4.1"
 
 [tool.poetry.dev-dependencies]
 Sphinx = "^3.2.1"

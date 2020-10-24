@@ -258,11 +258,16 @@ class MyAnimeList(object):
             api_format: strftime format string
         returns: formatted date string.
         """
-        if not date:
+        if not date or date is None:
             return "NA"
         if any(int(s) == 0 for s in date.split("-")):
             return date
-        return datetime.strptime(date, api_format).strftime(self.date_format)
+        try:
+            return datetime.strptime(date, api_format).strftime(
+                self.date_format
+            )
+        except ValueError:
+            return date
 
     @checked_regex
     @animated("matching animes/manga")

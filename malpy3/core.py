@@ -18,6 +18,9 @@ from malpy3.api import MyAnimeList
 from malpy3.utils import print_error
 from malpy3 import color
 
+# 3rd party
+import pynumparser
+
 
 def wrap_text(text, width=70):
     return "\n".join(
@@ -30,7 +33,7 @@ def report_if_fails(response):
         print(color.colorize("Failed with HTTP: {}".format(response), "red"))
 
 
-def select_item(items):
+def select_items(items):
     """
     Select a single item from a list of results.
 
@@ -41,21 +44,27 @@ def select_item(items):
         Dictionary.
 
     """
-    item = None
+    num_parser = pynumparser.NumberSequence()
+    selected_items = []
     if len(items) > 1:  # ambigious search results
         print(color.colorize("Multiple results:", "cyan"))
         # show user the results and make them choose one
         for index, title in enumerate(map(itemgetter("title"), items)):
             print("{index}: {title}".format_map(locals()))
-        index = int(input("Which one? "))
-        item = items[index]
+
+        choice = input("Select items? ")
+        index = list(num_parser.xparse(choice))
+
+        for _ in index:
+            selected_items.append(items[_])
+
     elif len(items) == 1:
-        item = items[0]
+        selected_items = [items[0]]
     else:
         print(color.colorize("No matches in list ᕙ(⇀‸↼‶)ᕗ", "red"))
         sys.exit(1)
 
-    return item
+    return selected_items
 
 
 def start_end(entry, episode, total_episodes):
@@ -123,39 +132,38 @@ def progress_update(mal, regex, inc=1, category="anime"):
         Dictionary object with updated values.
     """
     items = remove_completed(mal.find(regex, category=category))
-    item = select_item(items)  # also handles ambigious searches
-    epi_chap = item["episode"] + inc
+    selected_items = select_items(items)  # also handles ambigious searches
+    for item in selected_items:
+        epi_chap = item["episode"] + inc
 
-    if item["media_type"] == "manga":
-        entry = dict(
-            num_chapters_read=epi_chap,
-            score=item.get("score", 0),
-            media_type="manga",
+        if item["media_type"] == "manga":
+            entry = dict(
+                num_chapters_read=epi_chap,
+                score=item.get("score", 0),
+                media_type="manga",
+            )
+        else:
+            entry = dict(
+                num_watched_episodes=epi_chap,
+                score=item.get("score", 0),
+                media_type="anime",
+            )
+
+        template = {
+            "title": color.colorize(item["title"], "yellow", "bold"),
+            "episode": color.colorize(epi_chap, "red" if inc < 1 else "green"),
+            "total_episodes": color.colorize(item["total_episodes"], "cyan"),
+            "procedure": color.procedure_color(inc),
+        }
+        print(
+            (
+                "{procedure} progress for {title} to "
+                "{episode}/{total_episodes}".format_map(template)
+            )
         )
-    else:
-        entry = dict(
-            num_watched_episodes=epi_chap,
-            score=item.get("score", 0),
-            media_type="anime",
-        )
-
-    template = {
-        "title": color.colorize(item["title"], "yellow", "bold"),
-        "episode": color.colorize(epi_chap, "red" if inc < 1 else "green"),
-        "total_episodes": color.colorize(item["total_episodes"], "cyan"),
-        "procedure": color.procedure_color(inc),
-    }
-
-    print(
-        (
-            "{procedure} progress for {title} to "
-            "{episode}/{total_episodes}".format_map(template)
-        )
-    )
-
-    entry = start_end(entry, epi_chap, item["total_episodes"])
-    response = mal.update(item["id"], entry)
-    report_if_fails(response)
+        entry = start_end(entry, epi_chap, item["total_episodes"])
+        response = mal.update(item["id"], entry)
+        report_if_fails(response)
 
 
 def search(mal, regex, limit=20, extra=False, category="anime"):
@@ -253,23 +261,25 @@ def drop(mal, regex, category="anime"):
 
     """
     items = remove_completed(mal.find(regex, category=category))
-    item = select_item(items)
-    entry = dict(status="dropped", media_type=item.get("media_type"))
-    old_status = item.get("status")
-    template = {
-        "title": color.colorize(item.get("title"), "yellow", "bold"),
-        "old-status": color.colorize(old_status, "green", "bold"),
-        "action": color.colorize("Dropping", "red", "bold"),
-    }
+    selected_items = select_items(items)
 
-    print(
-        (
-            "{action} anime {title} from list "
-            "{old-status}".format_map(template)
+    for item in selected_items:
+        entry = dict(status="dropped", media_type=item.get("media_type"))
+        old_status = item.get("status")
+        template = {
+            "title": color.colorize(item.get("title"), "yellow", "bold"),
+            "old-status": color.colorize(old_status, "green", "bold"),
+            "action": color.colorize("Dropping", "red", "bold"),
+        }
+
+        print(
+            (
+                "{action} anime {title} from list "
+                "{old-status}".format_map(template)
+            )
         )
-    )
-    response = mal.update(item["id"], entry)
-    report_if_fails(response)
+        response = mal.update(item["id"], entry)
+        report_if_fails(response)
 
 
 def add(mal, regex="", _id=None, status="plan_to_watch", category="anime"):
@@ -291,8 +301,6 @@ def add(mal, regex="", _id=None, status="plan_to_watch", category="anime"):
     if category == "manga":
         status = status_mapping.get(status, status)
 
-    entry = dict(status=status, media_type=category)
-
     if _id:
         sel = mal.get_anime_details(_id, entry=entry)
         if sel.status_code != 200:
@@ -305,17 +313,19 @@ def add(mal, regex="", _id=None, status="plan_to_watch", category="anime"):
         response = mal.search(regex, category=category).json()["data"]
         results = [anime.get("node") for anime in response]
 
-        selected = select_item(results)
+        selected_items = select_items(results)
 
-    print(
-        "Adding {title} to list as '{status}'".format(
-            title=color.colorize(selected.get("title"), "yellow", "bold"),
-            status=status,
+    for selected in selected_items:
+        entry = dict(status=status, media_type=category)
+
+        print(
+            "Adding {title} to list as '{status}'".format(
+                title=color.colorize(selected.get("title"), "yellow", "bold"),
+                status=status,
+            )
         )
-    )
-
-    # mal.update(selected["id"], entry=entry)
-    mal.update(selected["id"], entry=entry)
+        # mal.update(selected["id"], entry=entry)
+        mal.update(selected["id"], entry=entry)
 
 
 def stats(mal):
@@ -475,64 +485,80 @@ def edit(mal, regex, changes, category="anime"):
     Return:
         None
     """
-    # find the correct entry to modify (handles animes not found)
 
-    entry = select_item(mal.find(regex, extra=True, category=category))
+    def change_entry(entry, changes):
+        for field, new in changes.items():
+            if field == "add_tags":
+                if entry.get("tags") is None:
+                    entry["tags"] = new
+                else:
+                    entry["tags"] += " " + new
+            else:
+                entry[field] = new
+        # if the entry didn't have a tag before and none was provived by
+        # the user as a change we need to remove the entry from the dict
+        # to prevent the api from thinking we want to add the 'None' tag
+        if entry.get("tags") is None:
+            entry.pop("tags")
+
+        changes["media_type"] = category
+
+        return entry, changes
+
+    # find the correct entry to modify (handles animes not found)
+    selected_items = select_items(
+        mal.find(regex, extra=True, category=category)
+    )
 
     if not changes:  # open file for user to choose changes manually
-        tmp_path = tempfile.gettempdir() + "/mal_tmp"
-        editor = os.environ.get("EDITOR", "/usr/bin/vi")
-        # write information to tmp file
-        with open(tmp_path, "w") as tmp:
-            tmp.write('# change fields for "{}"\n'.format(entry["title"]))
-            tmp.write("status: {}\n".format(entry["status"]))
-            for field in ["score", "tags"]:
-                tmp.write("{}: {}\n".format(field, entry[field]))
+        all_changes = []
+        for entry in selected_items:
+            tmp_path = tempfile.gettempdir() + "/mal_tmp"
+            editor = os.environ.get("EDITOR", "/usr/bin/vi")
+            # write information to tmp file
+            with open(tmp_path, "w") as tmp:
+                tmp.write(f"# change fields for '{entry['title']}'\n")
 
-        # open the file with the default editor
-        subprocess.call([editor, tmp_path])
+                for field in ["status", "score", "tags"]:
+                    tmp.write(f"{field}: {entry['field']}\n")
 
-        # read back the data into a dict if any changes were made
-        with open(tmp_path, "r") as tmp:
-            lines = [
-                l
-                for l in tmp.read().split("\n")
-                if l and not l.startswith("#")
-            ]
+            # open the file with the default editor
+            subprocess.call([editor, tmp_path])
 
-        # delete tmp file, we don't need it anymore
-        os.remove(tmp_path)
+            # read back the data into a dict if any changes were made
+            with open(tmp_path, "r") as tmp:
+                lines = [
+                    l
+                    for l in tmp.read().split("\n")
+                    if l and not l.startswith("#")
+                ]
 
-        changes = dict()
-        for field, value in [tuple(l.split(":")) for l in lines]:
-            field, value = field.strip(), value.strip()
-            if field == "status":
-                value = value
-            if str(entry[field]) != value:
-                changes[field] = value
-        if not changes:
-            return
+            # delete tmp file, we don't need it anymore
+            os.remove(tmp_path)
 
-    # change entry
-    for field, new in changes.items():
-        if field == "add_tags":
-            if entry.get("tags") is None:
-                entry["tags"] = new
-            else:
-                entry["tags"] += " " + new
-        else:
-            entry[field] = new
+            changes = dict()
+            for field, value in [tuple(l.split(":")) for l in lines]:
+                field, value = field.strip(), value.strip()
+                if field == "status":
+                    value = value
+                if str(entry[field]) != value:
+                    changes[field] = value
+            if not changes:
+                continue
 
-    # if the entry didn't have a tag before and none was provived by
-    # the user as a change we need to remove the entry from the dict
-    # to prevent the api from thinking we want to add the 'None' tag
-    if entry.get("tags") is None:
-        entry.pop("tags")
+            entry, changes = change_entry(entry, changes)
+            all_changes.append({entry["id"]: changes})
 
-    # send changes back to patch/update
-    changes["media_type"] = category
-    response = mal.update(entry["id"], changes)
-    report_if_fails(response)
+        for change in all_changes:
+            for _id in change:
+                response = mal.update(_id, change[_id])
+                report_if_fails(response)
+
+    else:
+        for entry in selected_items:
+            entry, changes = change_entry(entry, changes)
+            response = mal.update(entry["id"], changes)
+            report_if_fails(response)
 
 
 def anime_pprint(index, item, extra=False):
@@ -624,21 +650,37 @@ def delete(mal, regex="", _id=None, category="anime"):
 
     """
     if _id is not None and isinstance(_id, int):
-        delete_id = _id
+        entries = []
+        entry = mal.get_anime_details(
+            _id, entry={"media_type": category}
+        ).json()
+        entries.append(entry)
 
     else:
-        entry = select_item(mal.find(regex, extra=True, category=category))
-        delete_id = entry.get("id")
+        entries = []
+        selected_items = select_items(
+            mal.find(regex, limit=100, extra=False, category=category)
+        )
 
-        confirm = input(f"Are you sure you want to delete {entry['title']}? ")
+        for entry in selected_items:
+            entries.append(entry)
 
-        if confirm.upper() != "Y":
+    for entry in entries:
+        confirm = input(
+            f"Are you sure you want to delete {entry['title']} ? (Y or N): "
+        )
+        if confirm[0].upper() != "Y":
             sys.exit(0)
 
-    response = mal.delete(delete_id, category=category)
-    if response != 200:
-        print(color.colorize("Failed to delete", "red", "bold"))
+        response = mal.delete(entry["id"], category=category)
 
-    else:
-        print(color.colorize("Successfully deleted", "green", "bold"))
-        report_if_fails(response)
+        if response != 200:
+            print(color.colorize(f"Failed to delete", "red", "bold"))
+
+        else:
+            print(
+                color.colorize(
+                    f"Successfully deleted {entry['title']}", "green", "bold"
+                )
+            )
+            report_if_fails(response)

@@ -19,7 +19,7 @@ def get_credentials():
     """Fetch the username and password from the right file."""
     config = setup.get_config()
     if config.get("login").get("access_token", "") == "":
-        config= create_credentials()
+        config = create_credentials()
 
     return config
 
